@@ -1,0 +1,11 @@
+Package: sawr
+Title: SAW Estimation Procedure
+Version: 0.0.1
+Authors@R: c(person("Tim", "Mensinger", email = "tim.mensinger@uni-bonn.de", role = c("aut", "cre")),
+             person("Dominik", "Liebl", email = "dliebl@uni-bonn.de", role = c("aut")))
+Description: This Package contains the implementation of the SAW estimation procedure as described in "A Wavelet Method for Panel Models with Jump Discontinuities in the Parameters"
+Depends: R (>= 3.5.2)
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.1.9000
