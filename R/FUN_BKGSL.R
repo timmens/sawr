@@ -26,7 +26,7 @@ BKSGL.pdm.default <-  function(formula,
   nc 		      <- PF.obj$nc
   nr 		      <- PF.obj$nr
   P_Over	    <- PF.obj$P_Over
-  intercept   <- PF.obj$is_intercept
+  #intercept   <- PF.obj$is_intercept  # not used anywhere else ....
   dat.matrix	<- PF.obj$data.in.list
   x.all.matrix <- PF.obj$x.all.matrix # NEW (10.5,, for the third part of the estimation step one needs the data)
   dat.dim 	  <- c(nr, nc, P_Over)

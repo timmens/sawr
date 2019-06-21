@@ -1,6 +1,6 @@
 #' SAW Estimation Procedure
 #' 
-#' @param formula A formula object.
+#' @param formula A formula object; Note that "-1" is unnecessary since the method takes first differences.
 #' @param data A dataframe containing the variables. 
 #' @param s.thresh A tuning parameter.
 #' @export   
@@ -21,7 +21,8 @@ saw_fun <- function(formula, data, s.thresh = NULL) {
     coeffList[[i-1]] <- coeff[(posit[i-1] + 1):posit[i]]
   }
   
-  betaMat <- construct_beta(coeffList, tausList, nrow(x.all.matrix))
+  tausList <- lapply(tausList, function(tau_vect) tau_vect - 1) 
+  betaMat  <- construct_beta(coeffList, tausList, nrow(x.all.matrix))
   
   list(betaMat = betaMat, tausList = tausList, coeffList = coeffList)
 }
