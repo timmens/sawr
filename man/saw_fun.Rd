@@ -4,10 +4,10 @@
 \alias{saw_fun}
 \title{SAW Estimation Procedure}
 \usage{
-saw_fun(formula, data, s.thresh = NULL)
+saw_fun(formula, data, dot, s.thresh = NULL)
 }
 \arguments{
-\item{formula}{A formula object.}
+\item{formula}{A formula object; Note that "-1" is unnecessary since the method takes first differences.}
 
 \item{data}{A dataframe containing the variables.}
 

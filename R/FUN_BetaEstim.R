@@ -1,4 +1,4 @@
-construct_data_for_linear_model <- function(Y, x.all.matrix, tau_list) {
+construct_data_for_linear_model <- function(Y, x.all.matrix, tau_list, dot) {
   
   tau_indicator <- function(tau_vector, j, T) {
     tau_vector <- c(1, tau_vector, T)
@@ -10,26 +10,27 @@ construct_data_for_linear_model <- function(Y, x.all.matrix, tau_list) {
   }
   
   construct_regressors_p <- function(tau_vector, X) {
-    Sp         <- length(tau_vector)
-    T          <- nrow(X)
+    Sp <- length(tau_vector)
+    T  <- nrow(X)
+    N  <- ncol(X)
     
     if (any(is.na(tau_vector))) return(list(X))
     else{
-      return(lapply(1:(Sp+1), function(j) X * tau_indicator(tau_vector, j, T)))
+      return(lapply(1:(Sp+1), 
+              function(j) X * matrix(tau_indicator(tau_vector, j, T), nrow=T, ncol=N)))
     }
   }
   
-  rename <- function(X) {
-    colnames(X) <- paste0("N", 1:ncol(X))
-    X
-  }
-  
-  dot   <- function(X) X - apply(X, 1, mean)
+  if (dot) dot <- function(X) X - apply(X, 1, mean)
+  else dot <- function(X) X
   delta <- function(X) X[-1, ] - X[-nrow(X), ]
   
   P     <- length(tau_list)
   cols  <- rep(paste0("X", 1:P), each = (ncol(x.all.matrix) / P))
-  count <- sapply(tau_list, function(tau_vect) ifelse(any(is.na(tau_vect)), 0, length(tau_vect)))
+  count <- sapply(tau_list, 
+                  function(tau_vect) {
+                    ifelse(any(is.na(tau_vect)), 0, length(tau_vect))
+                    })
   
   regressor_names <- vector("character", P + sum(count))
   index <- 0
@@ -44,7 +45,7 @@ construct_data_for_linear_model <- function(Y, x.all.matrix, tau_list) {
   regressor_list <- mapply(construct_regressors_p, tau_list, X_list, SIMPLIFY = FALSE)
   regressor_list <- unlist(regressor_list, recursive = FALSE)
   regressor_list <- lapply(regressor_list, function(X) delta(dot(X)))
-  regressor_list <- lapply(regressor_list, rename)
+  regressor_list <- lapply(regressor_list, unname)
   names(regressor_list) <- regressor_names
   
   data_list <- append(list(Y = delta(dot(Y))), regressor_list)

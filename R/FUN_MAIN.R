@@ -4,13 +4,14 @@
 #' @param data A dataframe containing the variables. 
 #' @param s.thresh A tuning parameter.
 #' @export   
-saw_fun <- function(formula, data, s.thresh = NULL) {
+saw_fun <- function(formula, data, dot, s.thresh = NULL) {
   results <- BKSGL.pdm.default(formula, s.thresh)
   
   x.all.matrix <- results$x.all.matrix
   tausList     <- results$tausList
   
-  linear_model_data <- construct_data_for_linear_model(data$Y, x.all.matrix, tausList)
+  linear_model_data <- construct_data_for_linear_model(data$Y, x.all.matrix, 
+                                                       tausList, dot)
   lm_fit_model      <- lm.fit(linear_model_data$X, linear_model_data$Y)
   coeff             <- lm_fit_model$coefficients
   
