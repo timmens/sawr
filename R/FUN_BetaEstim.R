@@ -3,7 +3,7 @@ construct_data_for_linear_model <- function(Y, x.all.matrix, tau_list, dot) {
   tau_indicator <- function(tau_vector, j, T) {
     tau_vector <- c(1, tau_vector, T)
     
-    f = ifelse(j != 1, function(t) ifelse(t >  tau_vector[j] && t <= tau_vector[j + 1], 1, 0),
+    f = ifelse(j != 1, function(t) ifelse(t > tau_vector[j] && t <= tau_vector[j + 1], 1, 0),
                function(t) ifelse(t >= tau_vector[j] && t <= tau_vector[j + 1], 1, 0))
     
     sapply(1:T, f)

@@ -174,17 +174,29 @@ FUN.BKSGL.pdm <-
       })) ^ {
         Kappa / 2
       }) * s.thresh
+      # thresh <- (((2 * log(T)) / (n * T ^ {
+      #   1 / Kappa
+      # })) ^ {
+      #   Kappa / 2
+      # }) * s.thresh 
       b.coef[abs(b.coef) < thresh] = 0
     }
     else{
       naiv.resid <- y - rowSums(x * rep.int(gammaTilde, n))
+      #naiv.var.resid <- min(var(naiv.resid), 
+      #                      (quantile(naiv.resid, prob = .75) - quantile(naiv.resid, prob = .25)) / 1.34898)
       naiv.var.resid <- var(naiv.resid)
       thresh = sqrt(c(naiv.var.resid)) * ((2 * log(T * P)) / (n * T ^ {
         1 / Kappa
       })) ^ {
         Kappa / 2
       }
-      #thresh = sqrt(c(naiv.var.resid))*((2*log(T))/(n*T^{1/Kappa}))^{Kappa/2}
+      #thresh = sqrt(c(naiv.var.resid)) * ((2 * log(T)) / (n * T ^ {
+      #  1 / Kappa
+      #})) ^ {
+      #  Kappa / 2
+      #}
+      
       if (recalibrateThreshhold) {
         b.coef.plugIn    <-  b.coef
         b.coef.plugIn[abs(b.coef.plugIn) < thresh] = 0
