@@ -21,8 +21,7 @@ construct_data_for_linear_model <- function(Y, x.all.matrix, tau_list, dot) {
     }
   }
   
-  if (dot) dot <- function(X) X - apply(X, 1, mean)
-  else dot <- function(X) X
+  dot <- ifelse(dot, function(X) X - apply(X, 1, mean), function(X) X)
   delta <- function(X) X[-1, ] - X[-nrow(X), ]
   
   P     <- length(tau_list)

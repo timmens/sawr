@@ -6,36 +6,37 @@
 BKSGL.pdm.default <-  function(formula,
                                s.thresh = NULL,
                                off.set = NULL) {
-  # formula = Y~X1-1
-  
+  # formula = Y~X1
+
   # check fomula
-  
+
   if (!class(formula) == "formula") {
     stop(
       "\n Argument >>formula<< needs a formula-object like
          y~x1+... where the elements are matrices"
     )
   }
-  
+
   # names
-  
+
   names  <- names(model.frame(formula))
-  
+
   # prepare for FUN.default (give the data in a large matrix: (y, x1, ...xP) where y, xp are  NT x1 Vectors  )
-  PF.obj	    <- FUN.PformulaBKSG(formula = formula)
-  nc 		      <- PF.obj$nc
-  nr 		      <- PF.obj$nr
-  P_Over	    <- PF.obj$P_Over
+  PF.obj	     <- FUN.PformulaBKSG(formula = formula)
+  nc 		       <- PF.obj$nc
+  nr 		       <- PF.obj$nr
+  P_Over	     <- PF.obj$P_Over
   #intercept   <- PF.obj$is_intercept  # not used anywhere else ....
-  dat.matrix	<- PF.obj$data.in.list
-  x.all.matrix <- PF.obj$x.all.matrix # NEW (10.5,, for the third part of the estimation step one needs the data)
-  dat.dim 	  <- c(nr, nc, P_Over)
-  
-  
+  dat.matrix	 <- PF.obj$data.in.list
+  x.all.matrix <- PF.obj$x.all.matrix # NEW (10.5, for the third part of the estimation step one needs the data)
+  y.matrix     <- PF.obj$y.matrix # NEW (01.08, for the third part of the estimation step)
+  dat.dim 	   <- c(nr, nc, P_Over)
+
+
   colnames(dat.matrix) <- c(names[1], paste(names[-1], '_Shifted'), paste(names[-1], '_UnShifted'))
-  
+
   # Estimation results
-  
+
   # OLD VERSION (10.5)
   #model.est <-
   #  FUN.BKSGL.pdm(dat.matrix = dat.matrix,
@@ -43,13 +44,14 @@ BKSGL.pdm.default <-  function(formula,
   #                s.thresh   = s.thresh,
   #                ...)
   ##
-  
+
   # NEW VERSION (Also returns x.all.matrix for the third estimation step)
   model.est <- append(FUN.BKSGL.pdm(
                           dat.matrix = dat.matrix,
                           dat.dim    = dat.dim,
-                          s.thresh   = s.thresh), 
-                      list(x.all.matrix = x.all.matrix))
+                          s.thresh   = s.thresh),
+                      list(x.all.matrix = x.all.matrix,
+                           y.matrix = y.matrix))
   return(model.est)
 }
 
@@ -66,7 +68,7 @@ FUN.BKSGL.pdm <-
     T 	<- dat.dim[1]
     n	  <- dat.dim[2]
     P	  <- dat.dim[3]# or ncol(x)
-    
+
     WavDesgin <- function(T)
     {
       q <- log(T) / log(2)
@@ -89,14 +91,14 @@ FUN.BKSGL.pdm <-
       }
       EinsBases
     }
-    
+
     # construct father wavelates basis
     # print("construct EinsBases")
     EinsBases	  <- WavDesgin(T)
     nrEinsBasis	<- ncol(EinsBases)
-    
+
     # plot(EinsBases[, 5])
-    
+
     FUN.blk <-
       function(lk) {
         # lk runs from 1 to (nrEinsBasis-1) by 2 #lk =2
@@ -121,24 +123,24 @@ FUN.BKSGL.pdm <-
           Hlk <- crossprod(x[Einslk.n == 1, ])
           inv.Hlk <- solve(Hlk)
           rm(Hlk)
-          
+
           Einslkp1.n <- rep.int(EinsBases[, (lk + 1)], n)
           Hlkp1 <- crossprod(x[Einslkp1.n == 1, ])
           inv.Hlkp1 <- solve(Hlkp1)
           rm(Hlkp1)
-          
+
           svdinvHlkhalb <- eigen(inv.Hlk + inv.Hlkp1)
           invHlkhalb <-
             svdinvHlkhalb[[2]] %*% (diag(svdinvHlkhalb[[1]] ^ {
               -.5
             }, P)) %*% t(svdinvHlkhalb[[2]])
           rm(svdinvHlkhalb)
-          
+
           Al2km1 <-  inv.Hlk %*% invHlkhalb * sqrt(n * T)
           rm(inv.Hlk)
           Al2k <- inv.Hlkp1 %*% invHlkhalb * sqrt(n * T)
           rm(inv.Hlkp1)
-          
+
           #XI_lk <- rbind(x[Einslk.n ==1,]%*%Al2km1, -x[Einslkp1.n ==1,]%*%Al2k)
           XI_lk <- (x * Einslk.n) %*% Al2km1 - (x * Einslkp1.n) %*% Al2k
           #print(t(XI_lk)%*%XI_lk/(n*T))
@@ -154,7 +156,7 @@ FUN.BKSGL.pdm <-
         blkPhilk <- rbind(t(blk), Philk)
         #XI_lk
       }
-    
+
     BlkPhilk <- FUN.blk(1)
     #t(FUN.blk(1))%*%FUN.blk(2)
     for (lk in seq.int(2, (nrEinsBasis - 1), by = 2)) {
@@ -163,11 +165,11 @@ FUN.BKSGL.pdm <-
     Philk <- BlkPhilk[-1,]
     Blk <- BlkPhilk[1,]
     gammaTilde <- t(matrix(Philk %*% Blk, P, T))
-    
+
     Kappa = 1 - log(log(n * T)) / log(n * T)
     b.coef <- Blk
-    
-    
+
+
     if (!is.null(s.thresh)) {
       thresh <- (((2 * log(T * P)) / (n * T ^ {
         1 / Kappa
@@ -178,12 +180,12 @@ FUN.BKSGL.pdm <-
       #   1 / Kappa
       # })) ^ {
       #   Kappa / 2
-      # }) * s.thresh 
+      # }) * s.thresh
       b.coef[abs(b.coef) < thresh] = 0
     }
     else{
       naiv.resid <- y - rowSums(x * rep.int(gammaTilde, n))
-      #naiv.var.resid <- min(var(naiv.resid), 
+      #naiv.var.resid <- min(var(naiv.resid),
       #                      (quantile(naiv.resid, prob = .75) - quantile(naiv.resid, prob = .25)) / 1.34898)
       naiv.var.resid <- var(naiv.resid)
       thresh = sqrt(c(naiv.var.resid)) * ((2 * log(T * P)) / (n * T ^ {
@@ -196,7 +198,7 @@ FUN.BKSGL.pdm <-
       #})) ^ {
       #  Kappa / 2
       #}
-      
+
       if (recalibrateThreshhold) {
         b.coef.plugIn    <-  b.coef
         b.coef.plugIn[abs(b.coef.plugIn) < thresh] = 0
@@ -207,24 +209,24 @@ FUN.BKSGL.pdm <-
       }
       b.coef[abs(b.coef) < thresh] = 0
     }
-    
+
     gammahat  <- t(matrix(Philk %*% b.coef, P, T))
     residuals <- y - rowSums(x * rep.int(gammahat, n))
     var.resid <- var(residuals)
-    
+
     # detect postSAW jumps
-    
+
     TDiff      = dat.dim[1]
     N          = dat.dim[2]
     P_Over     = dat.dim[3]
     P          = P_Over %/% 2
-    
+
     DiagScaledMatforL  = diag(sqrt(TDiff / 2), TDiff)
     Event              = seq.int(3, (TDiff + 1), by = 2)
     Oddt               = seq.int(2, TDiff, by = 2)
-    
+
     PhiLk = DiagScaledMatforL[, (Event - 2)] - DiagScaledMatforL[, Oddt]
-    
+
     c_Coef  = matrix(0, nrow = (TDiff + 1), ncol = P)
     tausList = vector(mode = 'list')
     for (p in 1:P) {
@@ -239,9 +241,9 @@ FUN.BKSGL.pdm <-
         tausList[[p]] = NA
       }
     }
-    
+
     tausList
-    
+
     return(list(
       SAW_gamma   = gammahat,
       gammaTilde  = gammaTilde,
@@ -259,7 +261,7 @@ FUN.BKSGL.pdm <-
 
 plot.bkgsl <-
   function(BKSGL_Obj, dates, plot = TRUE, ...) {
-    
+
     SAW_gamma  = BKSGL_Obj$SAW_gamma
     gammaTilde = BKSGL_Obj$gammaTilde
     bTildeCoef = BKSGL_Obj$bTildeCoef
@@ -273,12 +275,12 @@ plot.bkgsl <-
     P          = P_Over %/% 2
     tausList   = BKSGL_Obj$tausList
     c_Coef     = BKSGL_Obj$c_Coef
-    
+
     SAW_betaShifted = rbind(rep(NA, P), SAW_gamma[, 1:P])
     SAW_betaUnShifted = rbind(SAW_gamma[, (P + 1):(2 * P)], rep(NA, P))
-    
+
     SAW_beta = cbind(SAW_betaShifted, SAW_betaUnShifted)
-    
+
     par(mfcol = c(1, 2))
     matplot(
       x = seq(1, (TDiff + 1)),
@@ -290,7 +292,7 @@ plot.bkgsl <-
       xlab = 't-index',
       xaxt = 'n'
     )
-    
+
     #lines(B1, typ = "S", lwd =2, col = 'gray', lty = 1)
     for (p in 1:P) {
       #p =1
@@ -298,7 +300,7 @@ plot.bkgsl <-
       axis(1, tausList[[p]], tausList[[p]])
     }
     title('SAW_gamma_t')
-    
+
     matplot(x = seq(1, (TDiff + 1)), c_Coef, xlab = 't-index')
     abline(h = c(thresh,-thresh))
     title('c_L- Coefficents')
