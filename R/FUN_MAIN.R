@@ -12,7 +12,10 @@ saw_fun <- function(formula, dot = FALSE, s.thresh = NULL) {
   tausList     <- results$tausList
 
   T <- nrow(y.matrix)
-  tausList <- lapply(tausList, function(tauVec) tauVec[!tauVec %in% T])
+  tausList <- lapply(tausList, function(tauVec) tauVec[!tauVec %in% c(1, T)])
+  tausList <- lapply(tausList, function(tauVec) {
+                        ifelse(length(tauVec) == 0, NA, tauVec)
+                    })
 
   linear_model_data <- construct_data_for_linear_model(y.matrix, x.all.matrix,
                                                        tausList, dot)
@@ -29,5 +32,6 @@ saw_fun <- function(formula, dot = FALSE, s.thresh = NULL) {
   tausList <- lapply(tausList, function(tau_vect) tau_vect - 1)
   betaMat  <- construct_beta(coeffList, tausList, nrow(x.all.matrix))
 
-  list(betaMat = betaMat, tausList = tausList, coeffList = coeffList)
+  list(betaMat = betaMat, tausList = tausList, coeffList = coeffList,
+       X = linear_model_data$X)
 }
