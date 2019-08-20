@@ -1,7 +1,7 @@
 #' SAW Estimation Procedure
 #'
 #' @param formula A formula object; Note that "-1" is unnecessary since the method takes first differences.
-#' @param data A dataframe containing the variables.
+#' @param dot A boolean indicating wether a dot operation is necessary given the underlying model.
 #' @param s.thresh A tuning parameter.
 #' @export
 saw_fun <- function(formula, dot = FALSE, s.thresh = NULL) {
