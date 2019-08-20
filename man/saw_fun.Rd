@@ -9,9 +9,9 @@ saw_fun(formula, dot = FALSE, s.thresh = NULL)
 \arguments{
 \item{formula}{A formula object; Note that "-1" is unnecessary since the method takes first differences.}
 
-\item{s.thresh}{A tuning parameter.}
+\item{dot}{A boolean indicating wether a dot operation is necessary given the underlying model.}
 
-\item{data}{A dataframe containing the variables.}
+\item{s.thresh}{A tuning parameter.}
 }
 \description{
 SAW Estimation Procedure
