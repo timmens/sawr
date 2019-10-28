@@ -2,8 +2,9 @@
 ### FUNCTION: BKSGL.pdm.default
 #########################################################################################################
 BKSGL.pdm.default <- function(formula,
-                               s.thresh = NULL,
-                               off.set = NULL) {
+                              s.thresh = NULL,
+                              off.set = NULL,
+                              ridge) {
   # formula = Y~X1
   # check fomula
   if (class(formula) != "formula") {
@@ -32,7 +33,8 @@ BKSGL.pdm.default <- function(formula,
 
   model.est <- FUN.BKSGL.pdm(dat.matrix=dat.matrix,
                              dat.dim=dat.dim,
-                             s.thresh=s.thresh)
+                             s.thresh=s.thresh,
+                             ridge=ridge)
   model.est <- append(model.est, list(x.all.matrix=x.all.matrix, y.matrix=y.matrix))
 
   model.est
@@ -44,7 +46,8 @@ BKSGL.pdm.default <- function(formula,
 FUN.BKSGL.pdm <- function(dat.matrix,
                           dat.dim,
                           s.thresh,
-                          recalibrateThreshhold = FALSE) {
+                          recalibrateThreshhold = FALSE,
+                          ridge) {
     # data and dimension
     y <- dat.matrix[,  1, drop = FALSE]
     x <- dat.matrix[, -1, drop = FALSE]
@@ -79,7 +82,7 @@ FUN.BKSGL.pdm <- function(dat.matrix,
     EinsBases	  <- WavDesgin(T)
     nrEinsBasis	<- ncol(EinsBases)
 
-    FUN.blk <- function(lk) {
+    FUN.blk <- function(lk, ridge) {
         # lk runs from 1 to (nrEinsBasis-1) by 2 #lk=2
 
         if (lk == 1) {
@@ -87,7 +90,7 @@ FUN.BKSGL.pdm <- function(dat.matrix,
           svdH00 <- eigen(H00)
           rm(H00)
           A00 <-
-            svdH00[[2]] %*% (diag(svdH00[[1]] ^ {
+            svdH00[[2]] %*% (diag((svdH00[[1]] + ridge) ^ {
               -0.5
             }, P)) %*% t(svdH00[[2]]) * sqrt(n * T)
           rm(svdH00)
@@ -100,17 +103,17 @@ FUN.BKSGL.pdm <- function(dat.matrix,
         else {  #(then lk = 2)
           Einslk.n <- rep.int(EinsBases[, lk], n)
           Hlk      <- crossprod(x[Einslk.n == 1, ])
-          inv.Hlk  <- solve(Hlk)
+          inv.Hlk  <- solve(Hlk + ridge * diag(ncol(Hlkp1)))
           rm(Hlk)
 
           Einslkp1.n <- rep.int(EinsBases[, (lk + 1)], n)
           Hlkp1      <- crossprod(x[Einslkp1.n == 1, ])
-          inv.Hlkp1  <- solve(Hlkp1)
+          inv.Hlkp1  <- solve(Hlkp1 + ridge * diag(ncol(Hlkp1)))
           rm(Hlkp1)
 
           svdinvHlkhalb <- eigen(inv.Hlk + inv.Hlkp1)
           invHlkhalb <-
-            svdinvHlkhalb[[2]] %*% (diag(svdinvHlkhalb[[1]] ^ {
+            svdinvHlkhalb[[2]] %*% (diag((svdinvHlkhalb[[1]] + ridge) ^ {
               -.5
             }, P)) %*% t(svdinvHlkhalb[[2]])
           rm(svdinvHlkhalb)
@@ -137,10 +140,10 @@ FUN.BKSGL.pdm <- function(dat.matrix,
         blkPhilk
     }
 
-    BlkPhilk <- FUN.blk(1)
+    BlkPhilk <- FUN.blk(1, ridge)
     #t(FUN.blk(1))%*%FUN.blk(2)
     for (lk in seq.int(2, (nrEinsBasis - 1), by = 2)) {
-      BlkPhilk <- cbind(BlkPhilk, FUN.blk(lk))
+      BlkPhilk <- cbind(BlkPhilk, FUN.blk(lk, ridge))
     }
     Philk <- BlkPhilk[-1,]
     Blk   <- BlkPhilk[1,]

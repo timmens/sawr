@@ -6,7 +6,7 @@
 #' @param ridge A stabilization parameter to avoid inverting (near) singular design matrices (t(X)X)
 #' @export
 saw_fun <- function(formula, dot=FALSE, s.thresh=NULL, ridge=10e-5) {
-  results <- BKSGL.pdm.default(formula, s.thresh)
+  results <- BKSGL.pdm.default(formula, s.thresh, ridge=ridge)
 
   x.all.matrix <- results$x.all.matrix
   y.matrix     <- results$y.matrix
@@ -28,9 +28,8 @@ saw_fun <- function(formula, dot=FALSE, s.thresh=NULL, ridge=10e-5) {
                                                        tausList, dot)
   X <- linear_model_data$X
   Y <- linear_model_data$Y
-  S <- t(X) %*% X + ridge * diag(ncol(X))
 
-  coeff <- solve(S) %*% t(X) %*% Y    # for ridge = 0 this results in the OLS solution
+  coeff <- solve(t(X) %*% X) %*% t(X) %*% Y
 
   posit   <- cumsum(sapply(tausList, function(tau_vect) sum(!is.na(tau_vect)) + 1))
   posit   <- c(0, posit)
