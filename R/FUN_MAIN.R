@@ -1,7 +1,7 @@
 #' SAW Estimation Procedure
 #'
 #' @param formula A formula object; Note that "-1" is unnecessary since the method takes first differences.
-#' @param dot A boolean indicating wether a dot operation is necessary given the underlying model.
+#' @param dot A boolean indicating wether a common time trend is to be eliminated.
 #' @param s.thresh A tuning parameter.
 #' @export
 saw_fun <- function(formula, dot = FALSE, s.thresh = NULL) {
@@ -12,10 +12,16 @@ saw_fun <- function(formula, dot = FALSE, s.thresh = NULL) {
   tausList     <- results$tausList
 
   T <- nrow(y.matrix)
-  tausList <- lapply(tausList, function(tauVec) tauVec[!tauVec %in% c(1, T)])
   tausList <- lapply(tausList, function(tauVec) {
-                        ifelse(length(tauVec) == 0, NA, tauVec)
+                        if (length(tauVec)) {
+                          tauVec
+                        } else {
+                          NA
+                        }
                     })
+
+  tausList <- lapply(tausList, function(tau_vect) tau_vect - 1)
+  tausList <- lapply(tausList, function(tauVec) tauVec[!tauVec %in% c(1, T)])
 
   linear_model_data <- construct_data_for_linear_model(y.matrix, x.all.matrix,
                                                        tausList, dot)
@@ -29,7 +35,6 @@ saw_fun <- function(formula, dot = FALSE, s.thresh = NULL) {
     coeffList[[i-1]] <- coeff[(posit[i-1] + 1):posit[i]]
   }
 
-  tausList <- lapply(tausList, function(tau_vect) tau_vect - 1)
   betaMat  <- construct_beta(coeffList, tausList, nrow(x.all.matrix))
 
   list(betaMat = betaMat, tausList = tausList, coeffList = coeffList,

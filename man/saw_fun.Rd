@@ -9,7 +9,7 @@ saw_fun(formula, dot = FALSE, s.thresh = NULL)
 \arguments{
 \item{formula}{A formula object; Note that "-1" is unnecessary since the method takes first differences.}
 
-\item{dot}{A boolean indicating wether a dot operation is necessary given the underlying model.}
+\item{dot}{A boolean indicating wether a common time trend is to be eliminated.}
 
 \item{s.thresh}{A tuning parameter.}
 }
