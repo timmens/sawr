@@ -4,7 +4,7 @@
 \alias{saw_fun}
 \title{SAW Estimation Procedure}
 \usage{
-saw_fun(formula, dot = FALSE, s.thresh = NULL)
+saw_fun(formula, dot = FALSE, s.thresh = NULL, ridge = 1e-04)
 }
 \arguments{
 \item{formula}{A formula object; Note that "-1" is unnecessary since the method takes first differences.}
@@ -12,6 +12,8 @@ saw_fun(formula, dot = FALSE, s.thresh = NULL)
 \item{dot}{A boolean indicating wether a common time trend is to be eliminated.}
 
 \item{s.thresh}{A tuning parameter.}
+
+\item{ridge}{A stabilization parameter to avoid inverting (near) singular design matrices (t(X)X)}
 }
 \description{
 SAW Estimation Procedure

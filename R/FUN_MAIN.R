@@ -3,8 +3,9 @@
 #' @param formula A formula object; Note that "-1" is unnecessary since the method takes first differences.
 #' @param dot A boolean indicating wether a common time trend is to be eliminated.
 #' @param s.thresh A tuning parameter.
+#' @param ridge A stabilization parameter to avoid inverting (near) singular design matrices (t(X)X)
 #' @export
-saw_fun <- function(formula, dot = FALSE, s.thresh = NULL) {
+saw_fun <- function(formula, dot=FALSE, s.thresh=NULL, ridge=10e-5) {
   results <- BKSGL.pdm.default(formula, s.thresh)
 
   x.all.matrix <- results$x.all.matrix
@@ -25,8 +26,11 @@ saw_fun <- function(formula, dot = FALSE, s.thresh = NULL) {
 
   linear_model_data <- construct_data_for_linear_model(y.matrix, x.all.matrix,
                                                        tausList, dot)
-  lm_fit_model      <- lm.fit(linear_model_data$X, linear_model_data$Y)
-  coeff             <- lm_fit_model$coefficients
+  X <- linear_model_data$X
+  Y <- linear_model_data$Y
+  S <- t(X) %*% X + ridge * diag(ncol(X))
+
+  coeff <- solve(S) %*% t(X) %*% Y    # for ridge = 0 this results in the OLS solution
 
   posit   <- cumsum(sapply(tausList, function(tau_vect) sum(!is.na(tau_vect)) + 1))
   posit   <- c(0, posit)
