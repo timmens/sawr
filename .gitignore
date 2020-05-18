@@ -1,2 +1,4 @@
 .Rproj.user
+.Rbuildignore
+.Rhistory
 Make_package.R
