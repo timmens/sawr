@@ -2,7 +2,7 @@
 #'
 #' @param formula A formula object; Note that "-1" is unnecessary since the method takes first differences.
 #' @param dot A boolean indicating wether a common time trend is to be eliminated.
-#' @param s.thresh A tuning parameter.
+#' @param s.thresh A tuning parameter further adjusting the threshold lambda.
 #' @export
 saw_fun <- function(formula, dot = FALSE, s.thresh = NULL) {
 
@@ -44,3 +44,13 @@ saw_fun <- function(formula, dot = FALSE, s.thresh = NULL) {
   list(betaMat = betaMat, tausList = tausList, coeffList = coeffList,
        X = linear_model_data$X)
 }
+
+
+
+#' swar
+#'
+#' This package contains the implementations of the panel data estimation procedure suggested in Bada et al. (2020), titled 'A Wavelet Method for Panel Models with Jump Discontinuities in the Parameters'
+#' @references Bada et al. (2020). A Wavelet Method for Panel Models with Jump Discontinuities in the Parameters'
+#' @docType package
+#' @name sawr
+NULL

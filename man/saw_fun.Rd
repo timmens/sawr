@@ -11,7 +11,7 @@ saw_fun(formula, dot = FALSE, s.thresh = NULL)
 
 \item{dot}{A boolean indicating wether a common time trend is to be eliminated.}
 
-\item{s.thresh}{A tuning parameter.}
+\item{s.thresh}{A tuning parameter further adjusting the threshold lambda.}
 }
 \description{
 SAW Estimation Procedure
