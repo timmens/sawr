@@ -1,4 +1,4 @@
-construct_data_for_linear_model <- function(Y, x.all.matrix, tausList, dot) {
+construct_data_for_linear_model <- function(y.matrix, x.all.matrix, tausList, dot) {
   
   tau_indicator <- function(tau_vector, j, T) {
     tau_vector <- c(1, tau_vector, T)
@@ -66,7 +66,7 @@ construct_data_for_linear_model <- function(Y, x.all.matrix, tausList, dot) {
     regressor_list <- lapply(regressor_list, unname)
     names(regressor_list) <- regressor_names
     
-    data_list <- append(list(Y = delta(dot(Y))), regressor_list)
+    data_list <- append(list(Y = delta(dot(y.matrix))), regressor_list)
     data_list <- lapply(data_list, as.vector)
     Y         <- data_list[[1]]
     X         <- data_list[-1]
