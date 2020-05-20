@@ -26,9 +26,9 @@ saw_fun <- function(formula, dot = FALSE, s.thresh = NULL) {
   tausList <- base::lapply(tausList, function(tauVec) tauVec[!tauVec %in% c(1, T)])
 
   # tauVec<-tausList[[2]]; tauVec[!tauVec %in% c(1, T)]
-
   linear_model_data <- sawr:::construct_data_for_linear_model(y.matrix, x.all.matrix,
                                                               tausList, dot)
+  
   lm_fit_model      <- stats::lm.fit(linear_model_data$X, linear_model_data$Y)
   coeff             <- lm_fit_model$coefficients
 

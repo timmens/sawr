@@ -24,34 +24,54 @@ construct_data_for_linear_model <- function(Y, x.all.matrix, tau_list, dot) {
   dot <- ifelse(dot, function(X) X - apply(X, 1, mean), function(X) X)
   delta <- function(X) X[-1, ] - X[-nrow(X), ]
   
-  P     <- length(tau_list)
-  cols  <- rep(paste0("X", 1:P), each = (ncol(x.all.matrix) / P))
-  count <- sapply(tau_list, 
-                  function(tau_vect) {
-                    ifelse(any(is.na(tau_vect)), 0, length(tau_vect))
-                    })
-  
-  regressor_names <- vector("character", P + sum(count))
-  index <- 0
-  for (i in 1:P) {
-    for (j in 1:(count[i] + 1)) {
-      index <- index + 1
-      regressor_names[index] <- paste0("X", i, j)
+  if (length(tausList) == 0) {
+    # In case no jumps were detected the original data is transformed and returned
+    K <- ncol(x.all.matrix) / ncol(y.matrix) 
+    dot <- ifelse(dot, function(X) X - apply(X, 1, mean), function(X) X)
+    delta <- function(X) X[-1, ] - X[-nrow(X), ]
+    
+    X_tmp <- matrix(array(x.all.matrix), ncol=K)
+    X_result <- c()
+    for (j in 1:K) {
+      Xj <- matrix(X_tmp[, j], nrow=nrow(y.matrix))
+      X_result <- c(X_result, array(delta(dot(Xj))))
     }
+    X <- matrix(X_result, ncol=K)
+    
+    Y_tmp <- delta(dot(y.matrix))
+    Y <- array(Y_tmp)
+    
+  } else {
+    
+    P     <- length(tau_list)
+    cols  <- rep(paste0("X", 1:P), each = (ncol(x.all.matrix) / P))
+    count <- sapply(tau_list, 
+                    function(tau_vect) {
+                      ifelse(any(is.na(tau_vect)), 0, length(tau_vect))
+                      })
+    
+    regressor_names <- vector("character", P + sum(count))
+    index <- 0
+    for (i in 1:P) {
+      for (j in 1:(count[i] + 1)) {
+        index <- index + 1
+        regressor_names[index] <- paste0("X", i, j)
+      }
+    }
+    
+    X_list         <- lapply(split.data.frame(t(x.all.matrix), cols), t)
+    regressor_list <- mapply(construct_regressors_p, tau_list, X_list, SIMPLIFY = FALSE)
+    regressor_list <- unlist(regressor_list, recursive = FALSE)
+    regressor_list <- lapply(regressor_list, function(X) delta(dot(X)))
+    regressor_list <- lapply(regressor_list, unname)
+    names(regressor_list) <- regressor_names
+    
+    data_list <- append(list(Y = delta(dot(Y))), regressor_list)
+    data_list <- lapply(data_list, as.vector)
+    Y         <- data_list[[1]]
+    X         <- data_list[-1]
+    X         <- do.call(cbind, X)
   }
-  
-  X_list         <- lapply(split.data.frame(t(x.all.matrix), cols), t)
-  regressor_list <- mapply(construct_regressors_p, tau_list, X_list, SIMPLIFY = FALSE)
-  regressor_list <- unlist(regressor_list, recursive = FALSE)
-  regressor_list <- lapply(regressor_list, function(X) delta(dot(X)))
-  regressor_list <- lapply(regressor_list, unname)
-  names(regressor_list) <- regressor_names
-  
-  data_list <- append(list(Y = delta(dot(Y))), regressor_list)
-  data_list <- lapply(data_list, as.vector)
-  Y         <- data_list[[1]]
-  X         <- data_list[-1]
-  X         <- do.call(cbind, X)
   
   return(list(Y = Y, X = X))
 }
