@@ -1,4 +1,4 @@
-construct_data_for_linear_model <- function(Y, x.all.matrix, tau_list, dot) {
+construct_data_for_linear_model <- function(Y, x.all.matrix, tausList, dot) {
   
   tau_indicator <- function(tau_vector, j, T) {
     tau_vector <- c(1, tau_vector, T)
@@ -43,9 +43,9 @@ construct_data_for_linear_model <- function(Y, x.all.matrix, tau_list, dot) {
     
   } else {
     
-    P     <- length(tau_list)
+    P     <- length(tausList)
     cols  <- rep(paste0("X", 1:P), each = (ncol(x.all.matrix) / P))
-    count <- sapply(tau_list, 
+    count <- sapply(tausList, 
                     function(tau_vect) {
                       ifelse(any(is.na(tau_vect)), 0, length(tau_vect))
                       })
@@ -60,7 +60,7 @@ construct_data_for_linear_model <- function(Y, x.all.matrix, tau_list, dot) {
     }
     
     X_list         <- lapply(split.data.frame(t(x.all.matrix), cols), t)
-    regressor_list <- mapply(construct_regressors_p, tau_list, X_list, SIMPLIFY = FALSE)
+    regressor_list <- mapply(construct_regressors_p, tausList, X_list, SIMPLIFY = FALSE)
     regressor_list <- unlist(regressor_list, recursive = FALSE)
     regressor_list <- lapply(regressor_list, function(X) delta(dot(X)))
     regressor_list <- lapply(regressor_list, unname)
