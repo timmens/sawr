@@ -79,8 +79,8 @@ construct_beta <- function(coeffList, tausList, T, coeff) {
   
   if (length(coeffList) == 0) {
     # do some stuff for beta whatever
-    results_list <- matrix(coeff, nrow=T, ncol=1)
-    rownames(results_list) <- rep("X11", T)
+    result_list <- matrix(coeff, nrow=T, ncol=1)
+    rownames(result_list) <- rep("X11", T)
   } else {
 
     construct_beta_for_single_regressor <- function(coeff_vect, tau_vect) {
