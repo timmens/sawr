@@ -74,21 +74,29 @@ construct_data_for_linear_model <- function(y.matrix, x.all.matrix, tausList, do
   return(list(Y = Y, X = X))
 }
 
-construct_beta <- function(coeffList, tausList, T) {
+construct_beta <- function(coeffList, tausList, T, coeff) {
   stopifnot(length(coeffList) == length(tausList))
   
-  force(T)
-  construct_beta_for_single_regressor <- function(coeff_vect, tau_vect) {
-    stopifnot(!any(is.na(tau_vect)) || length(coeff_vect) == 1,
-              any(is.na(tau_vect) || (length(coeff_vect) == length(tau_vect) + 1)))
-    if (any(is.na(tau_vect))) return(rep(coeff_vect, T))
+  if (length(coeffList) == 0) {
+    # do some stuff for beta whatever
+    results_list <- matrix(coeff, nrow=T, ncol=1)
+    rownames(results_list) <- rep("X11", T)
+  } else {
+
+    construct_beta_for_single_regressor <- function(coeff_vect, tau_vect) {
+      stopifnot(!any(is.na(tau_vect)) || length(coeff_vect) == 1,
+                any(is.na(tau_vect) || (length(coeff_vect) == length(tau_vect) + 1)))
+      if (any(is.na(tau_vect))) return(rep(coeff_vect, T))
+      
+      tau_vect <- c(0, tau_vect, T)
+      tau_rep  <- diff(tau_vect)
+      
+      rep(coeff_vect, times = tau_rep)
+    }
     
-    tau_vect <- c(0, tau_vect, T)
-    tau_rep  <- diff(tau_vect)
+    result_list <- mapply(construct_beta_for_single_regressor, coeffList, tausList)
     
-    rep(coeff_vect, times = tau_rep)
   }
   
-  result_list <- mapply(construct_beta_for_single_regressor, coeffList, tausList)
-  result_list
+  return(result_list)
 }

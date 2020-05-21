@@ -39,7 +39,7 @@ saw_fun <- function(formula, dot = FALSE, s.thresh = NULL) {
     coeffList[[i-1]] <- coeff[(posit[i-1] + 1):posit[i]]
   }
 
-  betaMat  <- sawr:::construct_beta(coeffList, tausList, base::nrow(x.all.matrix))
+  betaMat  <- sawr:::construct_beta(coeffList, tausList, base::nrow(x.all.matrix), coeff)
 
   list(betaMat = betaMat, tausList = tausList, coeffList = coeffList,
        X = linear_model_data$X)
