@@ -24,6 +24,7 @@ construct_data_for_linear_model <- function(y.matrix, x.all.matrix, tausList, do
   dot <- ifelse(dot, function(X) X - apply(X, 1, mean), function(X) X)
   delta <- function(X) X[-1, ] - X[-nrow(X), ]
   
+  # FIRST IF CONDITION MIGHT BE UNNECESSARY NOW
   if (length(tausList) == 0) {
     # In case no jumps were detected the original data is transformed and returned
     K <- ncol(x.all.matrix) / ncol(y.matrix) 

@@ -11,18 +11,23 @@ saw_fun <- function(formula, dot = FALSE, s.thresh = NULL) {
 
   x.all.matrix <- results$x.all.matrix
   y.matrix     <- results$y.matrix
-  tausList     <- results$tausList
+  tausListTmp  <- results$tausList
 
   T <- base::nrow(y.matrix)
-  tausList <- base::lapply(tausList, function(tauVec) {
-                        if (base::length(tauVec)) {
-                          tauVec
-                        } else {
-                          NA
-                        }
-                    })
+  N <- base::ncol(y.matrix)
+  P <- base::ncol(x.all.matrix) / N
+  
+  ## IF NO JUMPS WERE FOUND ON A GIVEN AXIS, THE VECTOR OF JUMPS IS SET TO NA
+  tausList = list()
+  for (i in 1:P) {
+    tauVec <- tryCatch(
+      expr = {tauVec <- tausListTmp[[i]]},
+      error = function(e) NA
+    )
+    tausList[[i]] = tauVec
+  }
 
-  tausList <- base::lapply(tausList, function(tau_vect) tau_vect - 1)
+  tausList <- base::lapply(tausList, function(tauVec) tauVec - 1)
   tausList <- base::lapply(tausList, function(tauVec) tauVec[!tauVec %in% c(1, T)])
 
   # tauVec<-tausList[[2]]; tauVec[!tauVec %in% c(1, T)]
