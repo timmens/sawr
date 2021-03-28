@@ -2,3 +2,4 @@
 .Rbuildignore
 .Rhistory
 Make_package.R
+*.Rproj

@@ -1,11 +1,16 @@
 Package: sawr
-Title: SAW Estimation Procedure
-Version: 0.1.0
-Authors@R: c(person("Tim", "Mensinger", email = "tim.mensinger@uni-bonn.de", role = c("aut", "cre")),
-             person("Dominik", "Liebl", email = "dliebl@uni-bonn.de", role = c("aut")))
-Description: This Package contains the implementation of the SAW estimation procedure as described in "A Wavelet Method for Panel Models with Jump Discontinuities in the Parameters"
-Depends: R (>= 3.5.2)
-License: GPL-3
+Title: What the Package Does (One Line, Title Case)
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "First",
+           family = "Last",
+           role = c("aut", "cre"),
+           email = "first.last@example.com",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: What the package does (one paragraph).
+License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
+    license
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.0
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
