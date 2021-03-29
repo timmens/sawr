@@ -1,3 +1,9 @@
+## SAW produce internal auxiliary methods
+#
+# Exports function ``FUN.PformulaBKSG`` which transforms the formula object to
+# a list containing all relevant data matrices and data dimensions.
+
+
 ## #============================================================================
 ## FUN.Pformula calls FUN.with.trans
 ##

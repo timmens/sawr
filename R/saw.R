@@ -1,5 +1,7 @@
-########### wrapper function for BKSGL
-# we can give here a formula and specify the form of the unobserved heterogeneity effects
+## SAW procedure main script
+#
+# Includes main wrapper function which produces estimates \tilde{\gamma} in the
+# paper.
 
 
 BKSGL.pdm.default <-  function(formula, s.thresh = NULL, off.set = NULL) {

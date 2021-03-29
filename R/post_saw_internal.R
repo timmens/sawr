@@ -1,3 +1,8 @@
+## Post-SAW procedure internal auxiliary methods
+#
+# Exports auxiliary functions used in the post-SAW procedure.
+
+
 tau_indicator <- function(tau_vector, j, T) {
   tau_vector <- c(1, tau_vector, T)
 
@@ -133,7 +138,8 @@ estimate_mean <- function(y.matrix, x.all.matrix, betaMat) {
 
 estimate_time_effect <- function(y.matrix, x.all.matrix, betaMat) {
   if (ncol(betaMat) > 1) return("This does not yet work for multivariate beta!")
-  estimate <- rowMeans(y.matrix) - estimate_mean(y.matrix, x.all.matrix, betaMat)
+  .mean <- estimate_mean(y.matrix, x.all.matrix, betaMat)
+  estimate <- rowMeans(y.matrix) - c(.mean)
   estimate <- estimate - rowMeans(x.all.matrix) * betaMat
   return(estimate)
 }
@@ -141,7 +147,18 @@ estimate_time_effect <- function(y.matrix, x.all.matrix, betaMat) {
 
 estimate_individual_effect <- function(y.matrix, x.all.matrix, betaMat) {
   if (ncol(betaMat) > 1) return("This does not yet work for multivariate beta!")
-  estimate <- colMeans(y.matrix) - estimate_mean(y.matrix, x.all.matrix, betaMat)
+  .mean <- estimate_mean(y.matrix, x.all.matrix, betaMat)
+  estimate <- colMeans(y.matrix) - c(.mean)
   estimate <- estimate - (t(x.all.matrix) %*% betaMat) / length(betaMat)
   return(estimate)
+}
+
+
+internal_iv_reg <- function(y, X, Z) {
+  # standard
+  left <- solve(t(Z) %*% X)
+  right <- t(Z) %*% y
+
+  coefficients <- left %*% right
+  return(coefficients)
 }
