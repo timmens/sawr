@@ -18,21 +18,21 @@ saw_fun <- function(
   y, X, Z = NULL, time_effect = FALSE, id_effect = FALSE, s.thresh = NULL
   ) {
 
-#   source("../simulation-saw-paper/src/R/dgp.R")
-#   T <- 33
-#   N <- 200
-#   time_effect = TRUE
-#   beta <- make_beta(T, S=2)
-#
-#   # time-effect
-#   # data <- dgp5(T, N, beta$beta)
-#   # Z <- NULL
-#   # endogeniety
-#   data <- dgp2(T, N, beta$beta)  # corr is .4 maybe increase this a little bit
-#   Z <- data$Z
-#   y <- data$Y
-#   X <- data$X
-#   s.thresh <- NULL
+   source("../simulation-saw-paper/src/R/dgp.R")
+   T <- 33
+   N <- 200
+   time_effect = TRUE
+   beta <- make_beta(T, S=2)
+
+   # time-effect
+   # data <- dgp5(T, N, beta$beta)
+   # Z <- NULL
+   # endogeniety
+   data <- dgp2(T, N, beta$beta)  # corr is .4 maybe increase this a little bit
+   Z <- data$Z
+   y <- data$Y
+   X <- data$X
+   s.thresh <- NULL
 
 
   ## create formula object since internal SAW method can only use formulas
@@ -94,7 +94,8 @@ saw_fun <- function(
     betaMat = beta_matrix,
     tausList = jump_locations,
     coeffList = coeff_list,
-    X = data$X
+    X = data$X,
+    gamma = saw_model$SAW_gamma
   )
 
   if (time_effect) {
