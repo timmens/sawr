@@ -8,8 +8,7 @@
 #' matrix of the pth covariate and has dimension T x N.
 #' @param Z Instruments corresponding to the argument X. If NULL all X variables
 #' are their own instrument.
-#' @param time_effect Boolean indicating if the method needs to control for a
-#' common time trend. This trend will then be estimated and returned.
+#' @param time_effect Boolean indicating if a time effect is to be estimated.
 #' @param id_effect Boolean indicating if an individual effect is to be
 #' estimated and returned.
 #' @param s.thresh Tuning parameter for the threshold lambda.
@@ -17,23 +16,6 @@
 saw_fun <- function(
   y, X, Z = NULL, time_effect = FALSE, id_effect = FALSE, s.thresh = NULL
   ) {
-
-   source("../simulation-saw-paper/src/R/dgp.R")
-   T <- 33
-   N <- 200
-   time_effect = TRUE
-   beta <- make_beta(T, S=2)
-
-   # time-effect
-   # data <- dgp5(T, N, beta$beta)
-   # Z <- NULL
-   # endogeniety
-   data <- dgp2(T, N, beta$beta)  # corr is .4 maybe increase this a little bit
-   Z <- data$Z
-   y <- data$Y
-   X <- data$X
-   s.thresh <- NULL
-
 
   ## create formula object since internal SAW method can only use formulas
   names(X) <- paste0("x", 1:length(X))
