@@ -1,92 +1,103 @@
-## SAW produce internal auxiliary methods
-#
-# Exports function ``FUN.PformulaBKSG`` which transforms the formula object to
-# a list containing all relevant data matrices and data dimensions.
-
-
-## #============================================================================
-## FUN.Pformula calls FUN.with.trans
-##
-## Takes: fomula = a formula-object
-##        effect = character-object ("none", "time", "individual", "twoways")
-##
-## Gives: A List with P+1 components
-##        (first for depend. variable second for indep. variables):
-##        Each Component is a List with 6 Components:
-##        1. Tr  (one of "none", "time", "individual", "twoways")
-##        2. I   (TRUE, if intercept, FALSE, if not)
-##        3. ODM (Original Data-Matrix)
-##        4. TDM (Transformed Data-Matrix)
-##        5. TDV (TDM as a vector)
-##        6. TRm is a list with 3 Components:
-##           1. OVc  (Overall constant)
-##           2. InC  (Individual constants)
-##           3. TiVC (Time varying constants)
-## #============================================================================
-
-FUN.PformulaBKSG <- function(formula, timeEffect = FALSE)
-{
-  data.fra <- model.frame(formula)
-  dat.term <- attr(data.fra, "terms")
-
-  ## Construct data from formula
-  ## dim(response) == TxN == dim(y.matrix) == TxN:
-  y.matrix <- model.response(data.fra, "numeric")
-  ## Check Data: Each Variable has to be a matrix
-  if(!is.matrix(y.matrix)) stop("Each Variable has to be a TxN-matrix.")
-  N  <- ncol(y.matrix)
-  T  <- nrow(y.matrix)
-
-  ## 1)Extract Regressors
-  ## 2)Check the presence of a 'intercept' in the formula
-  ## 3)And built the x.all.matrix (TxN*P)
-
-  regressors.mat <- model.matrix(dat.term, data.fra)
-  is.intercept <- ifelse(colnames(regressors.mat)[1] == "(Intercept)", TRUE, FALSE) # is.intercept = colnames(regressors.mat)[1] == "(Intercept)"
-  if(is.intercept) {
-    x.all.matrix <- regressors.mat[,-1]
-  } else {
-    x.all.matrix <- regressors.mat
-  }
-  #    if(!is.intercept & effect=="twoways"){stop("Effects >> twoways << need an Intercept!")}
-
-  ## Dimension parameters
-
-  NT <- N*T
-  P  <- as.integer(ncol(x.all.matrix)/N)
-  if(P!= ncol(x.all.matrix)/N) stop("All the regressors must have the same dimension as the response variable Y")
-
-  Delta_y.matrix         <- y.matrix[-1, ] - y.matrix[-T, ]
-  ##
-  Shifted_x.all.matrix   <- x.all.matrix[-1, ]
-  UnShifted_x.all.matrix <- -x.all.matrix[-T, ]
-
-  data.all.mat  <- cbind(Delta_y.matrix, Shifted_x.all.matrix, UnShifted_x.all.matrix)
-
-  ## Write the response variable, Y, and the augmented 'p' regressors, X, in a list,
-  ## where each component contains one of 2*p+1 TN-vector
-
-  data.in.list <- sapply(1:(2*P+1), function(z, i) c(z[,seq((i-1)*N+1,i*N)]), z = data.all.mat, simplify = TRUE)
-  data.in.list <- cbind(data.in.list, 1)  # edit tim: add constant to estimate delta theta
-
-  # OLD VERSION (10.5.)
-  #model.in.list <- list(
-  #  data.in.list = data.in.list,
-  #  nr           = T - 1,
-  #  nc           = N,
-  #  P_Over       = 2*P,
-  #  is_intercept = is.intercept
-  #  )
-
-  # NEW VERSION (For the third estimation step one also needs x.all.matrix)
-  model.in.list <- list(
-    data.in.list = data.in.list,
-    nr           = T - 1,
-    nc           = N,
-    P_Over       = 2*P + 1,
-    is_intercept = is.intercept,
-    x.all.matrix = x.all.matrix,
-    y.matrix     = y.matrix
-  )
+feature_list_to_matrix <- function(X) {
+  #' Convert list of P (TxN) matrices to single matrix with shape T x (N * P).
+  #' Data is stored as ["x_{t, 11}, x_{t, 12}, ..., x_{t, PN}"].
+  x <- do.call(cbind, X)
+  return(x)
 }
 
+
+data_to_matrix <- function(delta_y, shifted_x, unshifted_x, P) {
+  #' Construct data matrix where first column contains `delta_y` and other
+  #' columns correspond to `\underscore{X}`. The reference can be found in the
+  #' paper in section 2.1.
+
+  data <- cbind(delta_y, shifted_x, unshifted_x)
+  data <- sapply(
+    1:(2*P+1), function(z, i) c(z[,seq((i-1)*N+1,i*N)]), z=data, simplify=TRUE
+    )
+  data <- cbind(data, 1)
+  return(data)
+}
+
+transform_input_data <- function(y, X, Z) {
+  #' Transform input data which is either a T x N matrix (y) or a list of T x N
+  #' matrices (X and Z) to data objects expected from the saw method. That is
+  #' we construct `\delta y` from y and `\underscore{X}`, `\underscore{Z}` from
+  #' X and Z, respectively. See section 2.1 in the paper.
+
+  N <- ncol(y)
+  T <- nrow(y)
+  P <- length(X)
+
+  x <- feature_list_to_matrix(X)
+
+  delta_y <- y[-1, ] - y[-T, ]
+  shifted_x <- x[-1, ]
+  unshifted_x <- -x[-T, ]
+
+  data <- data_to_matrix(delta_y, shifted_x, unshifted_x, P)
+
+  if (!is.null(Z)) {
+    z <- feature_list_to_matrix(Z)
+    shifted_z <- z[-1, ]
+    unshifted_z <- -z[-T, ]
+
+    instrument <- data_to_matrix(delta_y, shifted_z, unshifted_z, P)
+    instrument <- instrument[, -1]
+  } else {
+    instrument <- NULL
+    z <- NULL
+  }
+
+  dimensions = list(N=N, T=T, P=P)
+
+  out <- list(data=data, instrument=instrument, x=x, z=z, dimensions=dimensions)
+  return(out)
+}
+
+
+compute_threshold <- function(y, x, N, TT, PP, s_thresh, gammaTilde, kappa=NULL) {
+  #' Compute threshold parameter.
+  #'
+  #' This function computes the threshold parameter used to shrink the `b`
+  #' coefficients to zero. The parameter is found in the paper under the label
+  #' `\lambda_{NT}`.
+
+  if (is.null(s_thresh)) {
+
+    rep_gammaTilde = gammaTilde
+    for (i in 2:N) {
+      rep_gammaTilde = rbind(rep_gammaTilde, gammaTilde)
+    }
+
+    naiv.resid <- y - rowSums(x*rep_gammaTilde)
+    naiv.var.resid <- var(naiv.resid)
+    thresh = sqrt(c(naiv.var.resid)) * compute_preliminary_threshold(N, TT, PP, kappa)
+
+  } else {
+
+    thresh <- s_thresh * compute_preliminary_threshold(N, TT, PP)
+
+  }
+
+  return(thresh)
+}
+
+compute_preliminary_threshold <- function(N, TT, PP, kappa) {
+
+  if (is.null(kappa)) {
+    # use asymptotic argument if no kappa is specified
+    kappa <- 1 - log(log(N * TT)) / log(N * TT)
+  }
+
+  threshold <- sqrt(PP) * ((2 * log(TT * PP)) / (N * TT ^ (1 / kappa))) ^ (kappa / 2)
+  return(threshold)
+}
+
+
+repmat <- function(mat, rows=1, cols=1) {
+  #' Repeat matrix in the both axis `rows` and `cols` times.
+  #'
+  out <- kronecker(matrix(1, rows, cols), mat)
+  return(out)
+}

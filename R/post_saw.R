@@ -11,48 +11,23 @@
 #' @param time_effect Boolean indicating if a time effect is to be estimated.
 #' @param id_effect Boolean indicating if an individual effect is to be
 #' estimated and returned.
-#' @param s.thresh Tuning parameter for the threshold lambda.
+#' @param s_thresh Tuning parameter for the threshold lambda.
 #' @export
-saw_fun <- function(
-  y, X, Z = NULL, time_effect = FALSE, id_effect = FALSE, s.thresh = NULL
+fit_saw <- function(
+  y, X, Z = NULL, time_effect = FALSE, id_effect = FALSE, s_thresh = NULL, return_info = FALSE
   ) {
 
-  ## create formula object since internal SAW method can only use formulas
-  names(X) <- paste0("x", 1:length(X))
-  data <- X
-  data$y <- y
-  formula <- paste0("y ~ ", paste(names(X), collapse = " + "))
-  formula <- as.formula(formula, env=list2env(data))
-
-  # this is not working..... (2SLS in SAW)
-  # else {
-  #   # instrument case; use 2SLS approach
-  #   XX <- sapply(X, function(x) as.vector(x))
-  #   ZZ <- sapply(Z, function(z) as.vector(z))
-  #   projection_model <- lm.fit(ZZ, XX)
-  #
-  #   residuals <- as.matrix(projection_model$residuals)
-  #   residuals <- split(residuals, rep(1:ncol(residuals), each=nrow(residuals)))
-  #   names(residuals) <- paste0("x", 1:length(X))
-  #   residuals <- lapply(residuals, function(x) matrix(x, ncol=ncol(y)))
-  #
-  #   data <- residuals
-  #   data$y <- y
-  #   formula <- paste0("y ~ ", paste(names(residuals), collapse = " + "))
-  #   formula <- as.formula(formula, env=list2env(data))
-  # }
-
   ## saw procedure
-  saw_model <- sawr:::BKSGL.pdm.default(formula, s.thresh)
+  saw_model <- saw_procedure(y, X, Z, s_thresh, return_info)
 
-  x.all.matrix <- saw_model$x.all.matrix
-  y.matrix <- saw_model$y.matrix
-  jump_locations <- saw_model$tausList
+  x <- saw_model[["x"]]
+  jump_locations <- saw_model[["jump_locations"]]
+  gamma_hat <- saw_model[["gamma_hat"]]
 
-  T <- base::nrow(y.matrix)
-  N <- base::ncol(y.matrix)
-  P <- base::ncol(x.all.matrix) / N
-  M <- base::nrow(x.all.matrix)
+  T <- base::nrow(y)
+  N <- base::ncol(y)
+  P <- base::ncol(x) / N
+  M <- base::nrow(x)
 
   # update jump locations
   jump_locations <- sawr:::set_entry_to_na_if_empty(jump_locations, P)
@@ -60,24 +35,27 @@ saw_fun <- function(
   jump_locations <- sawr:::drop_first_and_last_period(jump_locations)
 
   ## post-saw procedure
-  post_data <- sawr:::construct_data(y.matrix, x.all.matrix, jump_locations, time_effect)
-  if (is.null(Z)) {
+  post_data <- sawr:::construct_data(y, x, jump_locations, time_effect)
+  with_instrument <- !is.null(Z)
+  if (with_instrument) {
+    z <- saw_model[["z"]]
+    instrument <- sawr:::construct_data(y, z, jump_locations, time_effect)
+    coeff <- sawr:::internal_iv_reg(post_data$Y, post_data$X, instrument$X)
+  } else {
     model <- stats::lm.fit(post_data$X, post_data$Y)
     coeff <- model$coefficients
-  } else {
-    instrument <- sawr:::construct_data(y.matrix, Z[[1]], jump_locations, time_effect)
-    coeff <- internal_iv_reg(post_data$Y, post_data$X, instrument$X)
   }
 
   coeff_list <- sawr:::construct_coeff_list(jump_locations, coeff)
   beta_matrix <- sawr:::construct_beta(coeff_list, jump_locations, M, coeff)
 
+  ## return objects
   out <- list(
-    betaMat = beta_matrix,
-    tausList = jump_locations,
-    coeffList = coeff_list,
-    X = data$X,
-    gamma = saw_model$SAW_gamma
+    beta_matrix = beta_matrix,
+    jump_locations = jump_locations,
+    coeff_list = coeff_list,
+    gamma_hat = gamma_hat,
+    DESCRIPTION = return_description()
   )
 
   if (time_effect) {
