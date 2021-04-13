@@ -29,20 +29,20 @@ transform_input_data <- function(y, X, Z) {
   T <- nrow(y)
   P <- length(X)
 
-  x <- feature_list_to_matrix(X)
+  x <- sawr:::feature_list_to_matrix(X)
 
   delta_y <- y[-1, ] - y[-T, ]
   shifted_x <- x[-1, ]
   unshifted_x <- -x[-T, ]
 
-  data <- data_to_matrix(delta_y, shifted_x, unshifted_x, P)
+  data <- sawr:::data_to_matrix(delta_y, shifted_x, unshifted_x, P)
 
   if (!is.null(Z)) {
-    z <- feature_list_to_matrix(Z)
+    z <- sawr:::feature_list_to_matrix(Z)
     shifted_z <- z[-1, ]
     unshifted_z <- -z[-T, ]
 
-    instrument <- data_to_matrix(delta_y, shifted_z, unshifted_z, P)
+    instrument <- sawr:::data_to_matrix(delta_y, shifted_z, unshifted_z, P)
     instrument <- instrument[, -1]
   } else {
     instrument <- NULL
@@ -56,7 +56,7 @@ transform_input_data <- function(y, X, Z) {
 }
 
 
-compute_threshold <- function(y, x, N, TT, PP, s_thresh, gammaTilde, kappa=NULL) {
+compute_threshold <- function(y, x, N, TT, PP, s_thresh, gamma_tilde, kappa=NULL) {
   #' Compute threshold parameter.
   #'
   #' This function computes the threshold parameter used to shrink the `b`
@@ -65,18 +65,15 @@ compute_threshold <- function(y, x, N, TT, PP, s_thresh, gammaTilde, kappa=NULL)
 
   if (is.null(s_thresh)) {
 
-    rep_gammaTilde = gammaTilde
-    for (i in 2:N) {
-      rep_gammaTilde = rbind(rep_gammaTilde, gammaTilde)
-    }
+    rep_gamma_tilde <- sawr:::repmat(gamma_tilde, N)
 
-    naiv.resid <- y - rowSums(x*rep_gammaTilde)
+    naiv.resid <- y - rowSums(x*rep_gamma_tilde)
     naiv.var.resid <- var(naiv.resid)
-    thresh = sqrt(c(naiv.var.resid)) * compute_preliminary_threshold(N, TT, PP, kappa)
+    thresh = sqrt(c(naiv.var.resid)) * sawr:::compute_preliminary_threshold(N, TT, PP, kappa)
 
   } else {
 
-    thresh <- s_thresh * compute_preliminary_threshold(N, TT, PP)
+    thresh <- s_thresh * sawr:::compute_preliminary_threshold(N, TT, PP)
 
   }
 

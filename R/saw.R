@@ -2,7 +2,7 @@ saw_procedure <- function(y, X, Z=NULL, s_thresh=NULL, return_info=FALSE) {
 
   ## input data preparation
 
-  transformed_data <- transform_input_data(y, X, Z)
+  transformed_data <- sawr:::transform_input_data(y, X, Z)
 
   data <- transformed_data[["data"]]
   instrument <- transformed_data[["instrument"]]
@@ -16,7 +16,7 @@ saw_procedure <- function(y, X, Z=NULL, s_thresh=NULL, return_info=FALSE) {
 
   ## estimation
 
-  model <- saw_procedure_internal(data, instrument, dimensions, s_thresh, return_info)
+  model <- sawr:::saw_procedure_internal(data, instrument, dimensions, s_thresh, return_info)
 
 
   ## return objects
@@ -42,7 +42,7 @@ saw_procedure_internal <- function(data, instrument, dimensions, s_thresh, retur
 
   ## construct father wavelet basis
 
-  wavelet_bases <- construct_wavelet_design(TT)
+  wavelet_bases <- sawr:::construct_wavelet_design(TT)
 
 
   ## compute `W` matrix and `tilde{b}`
@@ -53,7 +53,7 @@ saw_procedure_internal <- function(data, instrument, dimensions, s_thresh, retur
   b_tilde <- c()
   for (index in iterator) {
 
-    tmp <- compute_w_matrix_and_b_tilde(index, delta_y, x, z, wavelet_bases, TT, N, PP)
+    tmp <- sawr:::compute_w_matrix_and_b_tilde(index, delta_y, x, z, wavelet_bases, TT, N, PP)
     W <- cbind(W, tmp[["W"]])
     b_tilde <- rbind(b_tilde, tmp[["b_tilde"]])
 
@@ -67,7 +67,7 @@ saw_procedure_internal <- function(data, instrument, dimensions, s_thresh, retur
 
   ## shrink `b` coefficients to zero
 
-  thresh <- compute_threshold(delta_y, x, N, TT, PP, s_thresh, gamma_tilde)
+  thresh <- sawr:::compute_threshold(delta_y, x, N, TT, PP, s_thresh, gamma_tilde)
   # if needed the threshold can be recalibrated here
 
   b_hat <- b_tilde
@@ -79,7 +79,7 @@ saw_procedure_internal <- function(data, instrument, dimensions, s_thresh, retur
   gamma_hat <- W %*% b_hat
   gamma_hat <- t(matrix(gamma_hat, PP, TT))
 
-  rep_gamma_hat <- repmat(gamma_hat, rows=N)
+  rep_gamma_hat <- sawr:::repmat(gamma_hat, rows=N)
 
   ## detect (postSAW) jump locations
 

@@ -18,7 +18,7 @@ fit_saw <- function(
   ) {
 
   ## saw procedure
-  saw_model <- saw_procedure(y, X, Z, s_thresh, return_info)
+  saw_model <- sawr:::saw_procedure(y, X, Z, s_thresh, return_info)
 
   x <- saw_model[["x"]]
   jump_locations <- saw_model[["jump_locations"]]
