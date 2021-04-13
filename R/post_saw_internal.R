@@ -3,6 +3,15 @@
 # Exports auxiliary functions used in the post-SAW procedure.
 
 
+data_to_formula <- function(y, X) {
+  names(X) <- paste0("x", 1:length(X))
+  data <- X
+  data$y <- y
+  formula <- paste0("y ~ ", paste(names(X), collapse = " + "))
+  formula <- as.formula(formula, env=list2env(data))
+}
+
+
 tau_indicator <- function(tau_vector, j, T) {
   tau_vector <- c(1, tau_vector, T)
 
@@ -161,4 +170,11 @@ internal_iv_reg <- function(y, X, Z) {
 
   coefficients <- left %*% right
   return(coefficients)
+}
+
+
+return_description <- function() {
+  # this function beautifully shows why people will switch to a different programming language than R
+  description = "The function fit_saw exports a list with arguments\n 1. beta_matrix\n2. jump_locations\n 3. coeff_list\n 4. gamma_hat\n 5. DESCRIPTION (this string)\n\n 2. represents the jump locations indexed as `tau_{p, i}`, i.e. the i-th jump\nlocation of the p-th covariate.\n\n3. represents the estimated beta coefficients for each time interval where\nthe coefficient is constant.\n\n1. represents the repeated coefficient matrix using the coefficients from 3.\n\n4. represents the first stage estimation of `gamma` (see paper for details)."
+  return(description)
 }
