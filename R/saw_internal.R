@@ -8,7 +8,7 @@ feature_list_to_matrix <- function(X) {
 
 
 #' @noRd
-data_to_matrix <- function(delta_y, shifted_x, unshifted_x, P) {
+data_to_matrix <- function(delta_y, shifted_x, unshifted_x, P, N) {
   #' Construct data matrix where first column contains `delta_y` and other
   #' columns correspond to `\underscore{X}`. The reference can be found in the
   #' paper in section 2.1.
@@ -38,14 +38,14 @@ transform_input_data <- function(y, X, Z) {
   shifted_x <- x[-1, ]
   unshifted_x <- -x[-T, ]
 
-  data <- data_to_matrix(delta_y, shifted_x, unshifted_x, P)
+  data <- data_to_matrix(delta_y, shifted_x, unshifted_x, P, N)
 
   if (!is.null(Z)) {
     z <- feature_list_to_matrix(Z)
     shifted_z <- z[-1, ]
     unshifted_z <- -z[-T, ]
 
-    instrument <- data_to_matrix(delta_y, shifted_z, unshifted_z, P)
+    instrument <- data_to_matrix(delta_y, shifted_z, unshifted_z, P, N)
     instrument <- instrument[, -1]
   } else {
     instrument <- NULL

@@ -59,10 +59,10 @@ fit_saw <- function(
   )
 
   if (time_effect) {
-    out$time_effect <- estimate_time_effect(y.matrix, x.all.matrix, beta_matrix)
+    out$time_effect <- estimate_time_effect(y, x, beta_matrix)
   }
   if (id_effect) {
-    out$id_effect <- estimate_individual_effect(y.matrix, x.all.matrix, beta_matrix)
+    out$id_effect <- estimate_individual_effect(y, x, beta_matrix)
   }
 
   return(out)
