@@ -107,9 +107,13 @@ saw_procedure_internal <- function(data, instrument, dimensions, s_thresh, retur
     c_tilde[even_time_period, p] <- t(PhiLk) %*% gamma_tilde[, p] / (TT)
     c_tilde[odd_time_period, p] <- t(PhiLk) %*% gamma_tilde[, p + P] / (TT)
 
-    c_hat <- abs(c_tilde[, p]) > thresh
+    c_hat_condition <- abs(c_tilde[, p]) > thresh
 
-    jump_locations[[p]] = seq(1, (TT + 1))[c_hat]  # how does this work?
+    if (any(c_hat_condition)) {
+      jump_locations[[p]] = seq(1, (TT + 1))[c_hat_condition]  # how does this work?
+    } else {
+      jump_locations[[p]] = NA
+    }
 
   }
 
