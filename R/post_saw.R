@@ -24,10 +24,10 @@ fit_saw <- function(
   jump_locations <- saw_model[["jump_locations"]]
   gamma_hat <- saw_model[["gamma_hat"]]
 
-  T <- base::nrow(y)
-  N <- base::ncol(y)
-  P <- base::ncol(x) / N
-  M <- base::nrow(x)
+  T <- nrow(y)
+  N <- ncol(y)
+  P <- ncol(x) / N
+  M <- nrow(x)
 
   # update jump locations
   jump_locations <- sawr:::set_entry_to_na_if_empty(jump_locations, P)
