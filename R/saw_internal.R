@@ -1,3 +1,4 @@
+#' @noRd
 feature_list_to_matrix <- function(X) {
   #' Convert list of P (TxN) matrices to single matrix with shape T x (N * P).
   #' Data is stored as ["x_{t, 11}, x_{t, 12}, ..., x_{t, PN}"].
@@ -6,6 +7,7 @@ feature_list_to_matrix <- function(X) {
 }
 
 
+#' @noRd
 data_to_matrix <- function(delta_y, shifted_x, unshifted_x, P) {
   #' Construct data matrix where first column contains `delta_y` and other
   #' columns correspond to `\underscore{X}`. The reference can be found in the
@@ -19,6 +21,7 @@ data_to_matrix <- function(delta_y, shifted_x, unshifted_x, P) {
   return(data)
 }
 
+#' @noRd
 transform_input_data <- function(y, X, Z) {
   #' Transform input data which is either a T x N matrix (y) or a list of T x N
   #' matrices (X and Z) to data objects expected from the saw method. That is
@@ -29,20 +32,20 @@ transform_input_data <- function(y, X, Z) {
   T <- nrow(y)
   P <- length(X)
 
-  x <- sawr:::feature_list_to_matrix(X)
+  x <- feature_list_to_matrix(X)
 
   delta_y <- y[-1, ] - y[-T, ]
   shifted_x <- x[-1, ]
   unshifted_x <- -x[-T, ]
 
-  data <- sawr:::data_to_matrix(delta_y, shifted_x, unshifted_x, P)
+  data <- data_to_matrix(delta_y, shifted_x, unshifted_x, P)
 
   if (!is.null(Z)) {
-    z <- sawr:::feature_list_to_matrix(Z)
+    z <- feature_list_to_matrix(Z)
     shifted_z <- z[-1, ]
     unshifted_z <- -z[-T, ]
 
-    instrument <- sawr:::data_to_matrix(delta_y, shifted_z, unshifted_z, P)
+    instrument <- data_to_matrix(delta_y, shifted_z, unshifted_z, P)
     instrument <- instrument[, -1]
   } else {
     instrument <- NULL
@@ -56,6 +59,7 @@ transform_input_data <- function(y, X, Z) {
 }
 
 
+#' @noRd
 compute_threshold <- function(y, x, N, TT, PP, s_thresh, gamma_tilde, kappa=NULL) {
   #' Compute threshold parameter.
   #'
@@ -65,21 +69,22 @@ compute_threshold <- function(y, x, N, TT, PP, s_thresh, gamma_tilde, kappa=NULL
 
   if (is.null(s_thresh)) {
 
-    rep_gamma_tilde <- sawr:::repmat(gamma_tilde, N)
+    rep_gamma_tilde <- repmat(gamma_tilde, N)
 
     naiv.resid <- y - rowSums(x*rep_gamma_tilde)
     naiv.var.resid <- var(naiv.resid)
-    thresh = sqrt(c(naiv.var.resid)) * sawr:::compute_preliminary_threshold(N, TT, PP, kappa)
+    thresh = sqrt(c(naiv.var.resid)) * compute_preliminary_threshold(N, TT, PP, kappa)
 
   } else {
 
-    thresh <- s_thresh * sawr:::compute_preliminary_threshold(N, TT, PP)
+    thresh <- s_thresh * compute_preliminary_threshold(N, TT, PP)
 
   }
 
   return(thresh)
 }
 
+#' @noRd
 compute_preliminary_threshold <- function(N, TT, PP, kappa) {
 
   if (is.null(kappa)) {
@@ -92,6 +97,7 @@ compute_preliminary_threshold <- function(N, TT, PP, kappa) {
 }
 
 
+#' @noRd
 repmat <- function(mat, rows=1, cols=1) {
   #' Repeat matrix in the both axis `rows` and `cols` times.
   #'

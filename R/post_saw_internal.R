@@ -3,6 +3,7 @@
 # Exports auxiliary functions used in the post-SAW procedure.
 
 
+#' @noRd
 data_to_formula <- function(y, X) {
   names(X) <- paste0("x", 1:length(X))
   data <- X
@@ -12,6 +13,7 @@ data_to_formula <- function(y, X) {
 }
 
 
+#' @noRd
 tau_indicator <- function(tau_vector, j, T) {
   tau_vector <- c(1, tau_vector, T)
 
@@ -22,6 +24,7 @@ tau_indicator <- function(tau_vector, j, T) {
   return(out)
 }
 
+#' @noRd
 construct_regressors_p <- function(tau_vector, X) {
   Sp <- length(tau_vector)
   T  <- nrow(X)
@@ -35,6 +38,7 @@ construct_regressors_p <- function(tau_vector, X) {
 }
 
 
+#' @noRd
 construct_data <- function(y.matrix, x.all.matrix, tausList, time_effect) {
 
   # dot and delta operator
@@ -73,6 +77,7 @@ construct_data <- function(y.matrix, x.all.matrix, tausList, time_effect) {
   return(list(Y = Y, X = X))
 }
 
+#' @noRd
 construct_beta <- function(coeffList, tausList, T, coeff) {
   stopifnot(length(coeffList) == length(tausList))
 
@@ -100,6 +105,7 @@ construct_beta <- function(coeffList, tausList, T, coeff) {
   return(result_list)
 }
 
+#' @noRd
 set_entry_to_na_if_empty <- function(jump_locations, P) {
   updated <- list()
   for (i in 1:P) {
@@ -113,18 +119,21 @@ set_entry_to_na_if_empty <- function(jump_locations, P) {
 }
 
 
+#' @noRd
 subtract_one <- function(jump_locations) {
   updated <- base::lapply(jump_locations, function(vec) vec - 1)
   return(updated)
 }
 
 
+#' @noRd
 drop_first_and_last_period <- function(jump_locations) {
   updated <- base::lapply(jump_locations, function(vec) vec[!vec %in% c(1, T)])
   return(updated)
 }
 
 
+#' @noRd
 construct_coeff_list <- function(jump_locations, coeff) {
   ## what am i doing here?
   posit <- base::cumsum(base::sapply(jump_locations, function(vec) base::sum(!base::is.na(vec)) + 1))
@@ -137,6 +146,7 @@ construct_coeff_list <- function(jump_locations, coeff) {
 }
 
 
+#' @noRd
 estimate_mean <- function(y.matrix, x.all.matrix, betaMat) {
   if (ncol(betaMat) > 1) return("This does not yet work for multivariate beta!")
   mu <- mean(y.matrix)
@@ -145,6 +155,7 @@ estimate_mean <- function(y.matrix, x.all.matrix, betaMat) {
 }
 
 
+#' @noRd
 estimate_time_effect <- function(y.matrix, x.all.matrix, betaMat) {
   if (ncol(betaMat) > 1) return("This does not yet work for multivariate beta!")
   .mean <- estimate_mean(y.matrix, x.all.matrix, betaMat)
@@ -154,6 +165,7 @@ estimate_time_effect <- function(y.matrix, x.all.matrix, betaMat) {
 }
 
 
+#' @noRd
 estimate_individual_effect <- function(y.matrix, x.all.matrix, betaMat) {
   if (ncol(betaMat) > 1) return("This does not yet work for multivariate beta!")
   .mean <- estimate_mean(y.matrix, x.all.matrix, betaMat)
@@ -163,6 +175,7 @@ estimate_individual_effect <- function(y.matrix, x.all.matrix, betaMat) {
 }
 
 
+#' @noRd
 internal_iv_reg <- function(y, X, Z) {
   # standard
   left <- solve(t(Z) %*% X)
@@ -173,6 +186,7 @@ internal_iv_reg <- function(y, X, Z) {
 }
 
 
+#' @noRd
 return_description <- function() {
   # this function beautifully shows why people will switch to a different programming language than R
   description = "The function fit_saw exports a list with arguments\n 1. beta_matrix\n2. jump_locations\n 3. coeff_list\n 4. gamma_hat\n 5. DESCRIPTION (this string)\n\n 2. represents the jump locations indexed as `tau_{p, i}`, i.e. the i-th jump\nlocation of the p-th covariate.\n\n3. represents the estimated beta coefficients for each time interval where\nthe coefficient is constant.\n\n1. represents the repeated coefficient matrix using the coefficients from 3.\n\n4. represents the first stage estimation of `gamma` (see paper for details)."

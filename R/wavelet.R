@@ -1,3 +1,4 @@
+#' @noRd
 construct_wavelet_design <- function(TT) {
 
   q <- log(TT) / log(2)
@@ -26,6 +27,7 @@ construct_wavelet_design <- function(TT) {
 }
 
 
+#' @noRd
 compute_w_matrix_and_b_tilde <- function(
   index, delta_y, x, z, wavelet_bases, TT, N, PP
 ) {
@@ -35,19 +37,20 @@ compute_w_matrix_and_b_tilde <- function(
   selector_minus <- rep.int(wavelet_bases[, index], N)
   selector <- rep.int(wavelet_bases[, index + 1], N)
 
-  H <- sawr:::construct_h_matrices(index, wavelet_bases, TT)
-  Q <- sawr:::construct_q_matrices(index, x, z, N, TT, selector_minus, selector, H)
-  A <- sawr:::construct_a_matrices(index, Q, PP)
-  W <- sawr:::construct_w_matrix(index, wavelet_bases, A, H)
+  H <- construct_h_matrices(index, wavelet_bases, TT)
+  Q <- construct_q_matrices(index, x, z, N, TT, selector_minus, selector, H)
+  A <- construct_a_matrices(index, Q, PP)
+  W <- construct_w_matrix(index, wavelet_bases, A, H)
 
-  caligraphic_data <- sawr:::construct_caligraphic_data(index, x, z, N, selector_minus, selector, A, H)
-  b_tilde <- sawr:::compute_b_tilde(index, delta_y, N, TT, wavelet_bases, caligraphic_data, selector_minus, selector)
+  caligraphic_data <- construct_caligraphic_data(index, x, z, N, selector_minus, selector, A, H)
+  b_tilde <- compute_b_tilde(index, delta_y, N, TT, wavelet_bases, caligraphic_data, selector_minus, selector)
 
   out <- list("W"=W, "b_tilde"=b_tilde)
   return(out)
 }
 
 
+#' @noRd
 construct_h_matrices <- function(index, wavelet_bases, TT) {
   #' Construct `H_{l, 2k}, H_{l, 2k -1 }` matrices.
   #'
@@ -69,6 +72,7 @@ construct_h_matrices <- function(index, wavelet_bases, TT) {
 }
 
 
+#' @noRd
 construct_q_matrices <- function(index, x, z, N, TT, selector_minus, selector, H) {
   #' Construct `\underscore{Q}` matrices.
   #'
@@ -116,6 +120,7 @@ construct_q_matrices <- function(index, x, z, N, TT, selector_minus, selector, H
 }
 
 
+#' @noRd
 construct_a_matrices <- function(index, Q, PP) {
   #' Construct `A` matrices.
   #'
@@ -130,7 +135,7 @@ construct_a_matrices <- function(index, Q, PP) {
   if (index == 1) {
 
     Q_inv <- solve(Q)
-    A <- sawr:::robust_matrix_square_root(Q_inv)
+    A <- robust_matrix_square_root(Q_inv)
     out <- A
 
   } else {
@@ -139,7 +144,7 @@ construct_a_matrices <- function(index, Q, PP) {
     Q_minus_inv <- solve(Q[["Q_minus"]])
 
     summand <- Q_inv + Q_minus_inv
-    to_multiply <- sawr:::robust_matrix_square_root(summand)
+    to_multiply <- robust_matrix_square_root(summand)
 
     A_minus <- Q_minus_inv %*% to_multiply
     A <- Q_inv %*% to_multiply
@@ -151,6 +156,7 @@ construct_a_matrices <- function(index, Q, PP) {
 }
 
 
+#' @noRd
 construct_caligraphic_data <- function(index, x, z, N, selector_minus, selector, A, H) {
   with_instrument <- !is.null(z)
 
@@ -185,6 +191,7 @@ construct_caligraphic_data <- function(index, x, z, N, selector_minus, selector,
 }
 
 
+#' @noRd
 construct_w_matrix <- function(index, wavelet_bases, A, H) {
 
   if (index == 1) {
@@ -203,6 +210,7 @@ construct_w_matrix <- function(index, wavelet_bases, A, H) {
 }
 
 
+#' @noRd
 compute_b_tilde <- function(index, delta_y, N, TT, wavelet_bases, caligraphic_data, selector_minus, selector) {
 
   with_instrument <- !is.null(caligraphic_data[["z"]])
@@ -227,6 +235,7 @@ compute_b_tilde <- function(index, delta_y, N, TT, wavelet_bases, caligraphic_da
 }
 
 
+#' @noRd
 drop_imaginary_part_if_zero <- function(x) {
 
   cols = ncol(x)
@@ -243,6 +252,7 @@ drop_imaginary_part_if_zero <- function(x) {
 }
 
 
+#' @noRd
 robust_matrix_square_root <- function(mat) {
   #' Compute the square root of `mat`.
   #'
@@ -260,29 +270,6 @@ robust_matrix_square_root <- function(mat) {
 
   out <- eigen_vectors %*% lambda %*% t(decom[[2]])
 
-  out <- sawr:::drop_imaginary_part_if_zero(out)
+  out <- drop_imaginary_part_if_zero(out)
   return(out)
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
