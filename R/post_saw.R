@@ -54,8 +54,7 @@ fit_saw <- function(
     beta_matrix = beta_matrix,
     jump_locations = jump_locations,
     coeff_list = coeff_list,
-    gamma_hat = gamma_hat,
-    DESCRIPTION = return_description()
+    gamma_hat = gamma_hat
   )
 
   if (time_effect) {
@@ -63,6 +62,9 @@ fit_saw <- function(
   }
   if (id_effect) {
     out$id_effect <- estimate_individual_effect(y, x, beta_matrix)
+  }
+  if (return_info) {
+    out$info <- saw_model[["additional_information"]]
   }
 
   return(out)

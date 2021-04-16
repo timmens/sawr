@@ -134,14 +134,14 @@ construct_a_matrices <- function(index, Q, PP) {
 
   if (index == 1) {
 
-    Q_inv <- solve(Q)
+    Q_inv <- robust_inverse(Q)
     A <- robust_matrix_square_root(Q_inv)
     out <- A
 
   } else {
 
-    Q_inv <- solve(Q[["Q"]])
-    Q_minus_inv <- solve(Q[["Q_minus"]])
+    Q_inv <- robust_inverse(Q[["Q"]])
+    Q_minus_inv <- robust_inverse(Q[["Q_minus"]])
 
     summand <- Q_inv + Q_minus_inv
     to_multiply <- robust_matrix_square_root(summand)
@@ -249,6 +249,25 @@ drop_imaginary_part_if_zero <- function(x) {
     out <- x
   }
   return(out)
+}
+
+
+#' @noRd
+robust_inverse <- function(mat, tolerance=0.05) {
+  #' Computes robust inverse for ill-conditioned and non-full-rank matrices.
+  #'
+
+  decom <- svd(mat)
+  d <- decom[["d"]]
+  # this gives the index of the last singular value larger than `tolerance`
+  index <- sum(d > tolerance)
+
+  ds <- diag(1 / d[1:index])
+  us <- as.matrix(decom[["u"]][, 1:index])
+  vs <- as.matrix(decom[["v"]][, 1:index])
+
+  inverse <- vs %*% ds %*% t(us)
+  return(inverse)
 }
 
 

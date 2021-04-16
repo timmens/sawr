@@ -69,7 +69,7 @@ saw_procedure_internal <- function(data, instrument, dimensions, s_thresh, retur
 
   ## shrink `b` coefficients to zero
 
-  thresh <- compute_threshold(delta_y, x, N, TT, PP, s_thresh, gamma_tilde)
+  thresh <- compute_threshold(delta_y, x, z, N, TT, PP, s_thresh, gamma_tilde)
   # if needed the threshold can be recalibrated here
 
   b_hat <- b_tilde
@@ -128,11 +128,6 @@ saw_procedure_internal <- function(data, instrument, dimensions, s_thresh, retur
 
   }
 
-
-  ## compute additional quantities
-  residuals <- delta_y - rowSums(x * rep_gamma_hat)
-
-
   ## return objects
 
   out <- list(
@@ -141,17 +136,15 @@ saw_procedure_internal <- function(data, instrument, dimensions, s_thresh, retur
   )
 
   if (return_info) {
-    additional_information <- list(
-      gamma_tilde = gamma_tilde,
-      b_tilde = b_tilde,
-      W = W,
-      thresh = thresh,
-      residuals = residuals,
-      wavelet_bases = wavelet_bases,
-      DeltaDatDim = dimensions,
-      c_tilde = c_tilde
-    )
-    out <- append(out, additional_information)
+    additional_information <- list(thresh=thresh)
+      # gamma_tilde = gamma_tilde,
+      # b_tilde = b_tilde,
+      # W = W,
+      # thresh = thresh,
+      # wavelet_bases = wavelet_bases,
+      # DeltaDatDim = dimensions,
+      # c_tilde = c_tilde
+    out <- append(out, list(additional_information=additional_information))
   }
 
   return(out)

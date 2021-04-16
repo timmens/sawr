@@ -60,7 +60,7 @@ transform_input_data <- function(y, X, Z) {
 
 
 #' @noRd
-compute_threshold <- function(y, x, N, TT, PP, s_thresh, gamma_tilde, kappa=NULL) {
+compute_threshold <- function(delta_y, x, z, N, TT, PP, s_thresh, gamma_tilde, kappa=NULL) {
   #' Compute threshold parameter.
   #'
   #' This function computes the threshold parameter used to shrink the `b`
@@ -71,13 +71,18 @@ compute_threshold <- function(y, x, N, TT, PP, s_thresh, gamma_tilde, kappa=NULL
 
     rep_gamma_tilde <- repmat(gamma_tilde, N)
 
-    naiv.resid <- y - rowSums(x*rep_gamma_tilde)
-    naiv.var.resid <- var(naiv.resid)
-    thresh = sqrt(c(naiv.var.resid)) * compute_preliminary_threshold(N, TT, PP, kappa)
+    with_instrument <- !is.null(z)
+    if (with_instrument) {
+      naive_residual <- delta_y - rowSums(z*rep_gamma_tilde)
+    } else {
+      naive_residual <- delta_y - rowSums(x*rep_gamma_tilde)
+    }
+
+    thresh = sd(naive_residual) * compute_preliminary_threshold(N, TT, PP, kappa)
 
   } else {
 
-    thresh <- s_thresh * compute_preliminary_threshold(N, TT, PP)
+    thresh <- s_thresh * compute_preliminary_threshold(N, TT, PP, kappa)
 
   }
 
