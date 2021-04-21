@@ -1,5 +1,5 @@
 #' @noRd
-saw_procedure <- function(y, X, Z=NULL, s_thresh=NULL, return_info=FALSE) {
+saw_procedure <- function(y, X, Z=NULL, s_thresh="residual", return_info=FALSE, tolerance=0.005) {
 
   ## input data preparation
 
@@ -16,19 +16,6 @@ saw_procedure <- function(y, X, Z=NULL, s_thresh=NULL, return_info=FALSE) {
 
 
   ## estimation
-
-  model <- saw_procedure_internal(data, instrument, dimensions, s_thresh, return_info)
-
-
-  ## return objects
-
-  out <- append(model, transformed_data)
-  return(out)
-}
-
-
-#' @noRd
-saw_procedure_internal <- function(data, instrument, dimensions, s_thresh, return_info) {
 
   delta_y <- data[,  1, drop = FALSE]
   x <- data[, -1, drop = FALSE]  # this corresponds to `\underscore{X}_{it}` in the paper
@@ -55,7 +42,7 @@ saw_procedure_internal <- function(data, instrument, dimensions, s_thresh, retur
   b_tilde <- c()
   for (index in iterator) {
 
-    tmp <- compute_w_matrix_and_b_tilde(index, delta_y, x, z, wavelet_bases, TT, N, PP)
+    tmp <- compute_w_matrix_and_b_tilde(index, delta_y, x, z, wavelet_bases, TT, N, PP, tolerance)
     W <- cbind(W, tmp[["W"]])
     b_tilde <- rbind(b_tilde, tmp[["b_tilde"]])
 
@@ -137,15 +124,9 @@ saw_procedure_internal <- function(data, instrument, dimensions, s_thresh, retur
 
   if (return_info) {
     additional_information <- list(thresh=thresh)
-      # gamma_tilde = gamma_tilde,
-      # b_tilde = b_tilde,
-      # W = W,
-      # thresh = thresh,
-      # wavelet_bases = wavelet_bases,
-      # DeltaDatDim = dimensions,
-      # c_tilde = c_tilde
     out <- append(out, list(additional_information=additional_information))
   }
 
+  out <- append(out, transformed_data)
   return(out)
 }

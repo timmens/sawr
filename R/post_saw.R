@@ -1,3 +1,15 @@
+#' sawr
+#'
+#' This package contains the implementations of the panel data estimation
+#' procedure suggested in Bada et al. (2020), titled 'A Wavelet Method for Panel
+#' Models with Jump Discontinuities in the Parameters'
+#' @references Bada et al. (2020). A Wavelet Method for Panel Models with Jump
+#' Discontinuities in the Parameters'
+#' @docType package
+#' @name sawr
+NULL
+
+
 #' Post-SAW Estimation Procedure.
 #'
 #' Exports main function of the package, which performs the SAW procedure and
@@ -11,10 +23,12 @@
 #' @param time_effect Boolean indicating if a time effect is to be estimated.
 #' @param id_effect Boolean indicating if an individual effect is to be
 #' estimated and returned.
-#' @param s_thresh Tuning parameter for the threshold lambda.
+#' @param s_thresh Tuning parameter for the threshold lambda. Default to
+#'   "residual". Can be either numeric or "residual" or "smalln".
+#' @param return_info Return additional info on model fit.
 #' @export
 fit_saw <- function(
-  y, X, Z = NULL, time_effect = FALSE, id_effect = FALSE, s_thresh = NULL, return_info = FALSE
+  y, X, Z = NULL, time_effect = TRUE, id_effect = TRUE, s_thresh = "residual", return_info = FALSE
   ) {
 
   ## saw procedure
@@ -67,16 +81,128 @@ fit_saw <- function(
     out$info <- saw_model[["additional_information"]]
   }
 
+  class(out) <- c("saw_model", "list")
   return(out)
 }
 
-#' sawr
+
+#' Predict with a fitted saw model
 #'
-#' This package contains the implementations of the panel data estimation
-#' procedure suggested in Bada et al. (2020), titled 'A Wavelet Method for Panel
-#' Models with Jump Discontinuities in the Parameters'
-#' @references Bada et al. (2020). A Wavelet Method for Panel Models with Jump
-#' Discontinuities in the Parameters'
-#' @docType package
-#' @name sawr
-NULL
+#' @param model fitted saw model output from function fit_saw
+#' @param X newdata of same shape as the one used to fit model
+#' @export
+predict.saw_model <- function(model, X) {
+
+  beta_matrix <- model[["beta_matrix"]]
+
+  te <- as.numeric(model[["time_effect"]])
+  ie <- as.numeric(model[["id_effect"]])
+
+  prediction <- 0
+  for (p in ncol(beta_matrix)) {
+    prediction <- prediction + X[[p]] * beta_matrix[, p]
+  }
+
+  if (length(te) != 0) {
+    prediction <- prediction + te
+  }
+  if (length(ie) != 0) {
+    prediction <- t(t(prediction) + ie)
+  }
+
+  return(prediction)
+}
+
+
+#' k-fold cross validation to find optimal threshold parameter
+#'
+#' @param y Matrix of labels. Has dimension T x N.
+#' @param X List of feature matrices. The pth entry corresponds to the design
+#' matrix of the pth covariate and has dimension T x N.
+#' @param Z Instruments corresponding to the argument X. If NULL all X variables
+#' are their own instrument.
+#' @param time_effect Boolean indicating if a time effect is to be estimated.
+#' @param n_folds Number of folds to use in cross validation step. Default 4. It
+#' makes sense that n_folds = k * n_cores.
+#' @param n_loops Number of s_thresh candidates.
+#' @param parallel Boolean indicating if code is parallelized over folds.
+#' @param n_cores How many cores to use for paralellization. Default to number
+#' of available logical cores. It makes sense that n_folds = k * n_cores.
+#' @param return_info Return additional info on model fit.
+#' @export
+fit_saw_cv <- function(
+  y, X, Z = NULL, time_effect = FALSE, n_folds=4, n_loops=20, parallel=TRUE, n_cores=NULL, return_info = FALSE
+  ) {
+
+  id_effect <- FALSE
+  N <- dim(X[[1]])[2]
+  folds <- caret::createFolds(1:N, k=n_folds)
+
+  # partial out arguments
+  func <- function(y, X, Z, s_thresh) {
+    return(fit_saw(y, X, Z, time_effect=time_effect, id_effect=id_effect, s_thresh=s_thresh))
+  }
+
+  # TODO: find good theoretical maximum for first coarse sweep
+
+  # first: coarse sweep
+  s_thresh_list <- seq(0, 19, length.out = n_loops)
+
+  errors <- internal_cv(y, X, Z, func, s_thresh_list, folds, parallel, n_cores)
+
+  # second: detailed sweep
+  candidates <- s_thresh_list[order(errors)[1:4]]
+  minimum <- max(0, min(candidates) - sd(candidates))
+  maximum <- max(candidates) + sd(candidates)
+  s_thresh_list <- seq(minimum, maximum, length.out = n_loops)
+
+  errors <- internal_cv(y, X, Z, func, s_thresh_list, folds, parallel, n_cores)
+
+  index <- which.min(errors)
+
+  model <- fit_saw(y, X, Z, time_effect, id_effect, s_thresh_list[index], return_info)
+  model$optimal_s_thresh <- s_thresh_list[index]
+  return(model)
+}
+
+
+#' @noRd
+internal_cv <- function(y, X, Z, func, s_thresh_list, folds, parallel, n_cores) {
+
+  task <- function(k) {
+    # task for fold k
+    y_train <- y[, -folds[[k]]]
+    y_test <- y[, folds[[k]]]
+    X_train <- lapply(X, function(x) x[, -folds[[k]]])
+    X_test <- lapply(X, function(x) x[, folds[[k]]])
+    if (is.null(Z)) {
+      Z_train <- NULL
+      Z_test <- NULL
+    } else {
+      Z_train <- lapply(Z, function(z) z[, -folds[[k]]])
+      Z_test <- lapply(Z, function(z) z[, folds[[k]]])
+    }
+
+    inner_errors <- c()
+    for (s in seq_along(s_thresh_list)) {
+      model <- func(y_train, X_train, Z_train, s_thresh_list[s])
+      pred <- predict(model, X_test)
+
+      inner_errors[s] <- mean((y_test - pred)**2)
+    }
+
+    return(inner_errors)
+  }
+
+  if (parallel) {
+
+    n_cores <- ifelse(is.null(n_cores), parallel::detectCores(), n_cores)
+    errors <- parallel::mcmapply(task, seq_along(folds), mc.cores = n_cores)
+
+  } else {
+    errors <- sapply(seq_along(folds), task)
+  }
+
+  errors <- rowMeans(errors)
+  return(errors)
+}

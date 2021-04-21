@@ -67,7 +67,13 @@ compute_threshold <- function(delta_y, x, z, N, TT, PP, s_thresh, gamma_tilde, k
   #' coefficients to zero. The parameter is found in the paper under the label
   #' `\lambda_{NT}`.
 
-  if (is.null(s_thresh)) {
+  preliminary_threshold <- compute_preliminary_threshold(N, TT, PP, kappa)
+
+  if (is.numeric(s_thresh)) {
+
+    multiplier <- s_thresh
+
+  } else if (s_thresh == "residual") {
 
     rep_gamma_tilde <- repmat(gamma_tilde, N)
 
@@ -76,15 +82,21 @@ compute_threshold <- function(delta_y, x, z, N, TT, PP, s_thresh, gamma_tilde, k
       naive_residual <- delta_y - rowSums(z*rep_gamma_tilde)
     } else {
       naive_residual <- delta_y - rowSums(x*rep_gamma_tilde)
-    }
 
-    thresh = sd(naive_residual) * compute_preliminary_threshold(N, TT, PP, kappa)
+    }
+    multiplier <- sd(naive_residual)
+
+  } else if (s_thresh == "smalln") {
+
+    multiplier <- log(N) * sqrt(sqrt(TT / N))
 
   } else {
 
-    thresh <- s_thresh * compute_preliminary_threshold(N, TT, PP, kappa)
+    stop("s_thresh has to be a number of 'smalln' or 'residual'")
 
   }
+
+  thresh <- multiplier * preliminary_threshold
 
   return(thresh)
 }
