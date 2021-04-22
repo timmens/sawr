@@ -8,9 +8,9 @@ fit_saw(
   y,
   X,
   Z = NULL,
-  time_effect = FALSE,
-  id_effect = FALSE,
-  s_thresh = NULL,
+  time_effect = TRUE,
+  id_effect = TRUE,
+  s_thresh = "residual",
   return_info = FALSE
 )
 }
@@ -28,7 +28,10 @@ are their own instrument.}
 \item{id_effect}{Boolean indicating if an individual effect is to be
 estimated and returned.}
 
-\item{s_thresh}{Tuning parameter for the threshold lambda.}
+\item{s_thresh}{Tuning parameter for the threshold lambda. Default to
+"residual". Can be either numeric or "residual" or "smalln".}
+
+\item{return_info}{Return additional info on model fit.}
 }
 \description{
 Exports main function of the package, which performs the SAW procedure and

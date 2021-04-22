@@ -6,7 +6,8 @@ Maintainer: Tim Mensinger <tim.mensinger@uni-bonn.de>
 Description: Estimate jump locations in multivariate linear model.
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
+Encoding: UTF-8
 Imports:
-    caret
-    parallel
+    caret,
+    parallel,
     stats
