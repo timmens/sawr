@@ -30,6 +30,8 @@ model <- sawr::fit_saw(y, X, time_effect = TRUE)
 optimal_model <- sawr::fit_saw_cv(y, X, n_folds=4, parallel=TRUE)
 ```
 
+> Remark. Parallelization might only be available for unix users.
+
 
 ##### Prediction and instrumental variables
 

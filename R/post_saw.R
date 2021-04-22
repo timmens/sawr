@@ -143,8 +143,6 @@ fit_saw_cv <- function(
     return(fit_saw(y, X, Z, time_effect=time_effect, id_effect=id_effect, s_thresh=s_thresh))
   }
 
-  # TODO: find good theoretical maximum for first coarse sweep
-
   # first: coarse sweep
   s_thresh_list <- seq(0, 19, length.out = n_loops)
 
