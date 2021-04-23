@@ -114,8 +114,10 @@ predict.saw_model <- function(model, X) {
 }
 
 
-#' k-fold cross validation to find optimal threshold parameter
+#' Return cross-validated model
 #'
+#' @description Find optimal threshold parameter using k-fold cross validation
+#' and return model fitted using this threshold.
 #' @param y Matrix of labels. Has dimension T x N.
 #' @param X List of feature matrices. The pth entry corresponds to the design
 #' matrix of the pth covariate and has dimension T x N.
@@ -123,15 +125,29 @@ predict.saw_model <- function(model, X) {
 #' are their own instrument.
 #' @param time_effect Boolean indicating if a time effect is to be estimated.
 #' @param n_folds Number of folds to use in cross validation step. Default 4. It
-#' makes sense that n_folds = k * n_cores.
-#' @param n_loops Number of s_thresh candidates.
+#' makes sense that n_folds is multiple of n_cores.
+#' @param grid_size Number of s_thresh candidates.
+#' @param prefer_sparsity Boolean indicating whether the cross-validation.
+#' procedure should place a naive penalty on non-sparse solutions.
 #' @param parallel Boolean indicating if code is parallelized over folds.
 #' @param n_cores How many cores to use for paralellization. Default to number
-#' of available logical cores. It makes sense that n_folds = k * n_cores.
+#' of available logical cores. It makes sense that n_folds is multiple of
+#' n_cores.
 #' @param return_info Return additional info on model fit.
 #' @export
 fit_saw_cv <- function(
-  y, X, Z = NULL, time_effect = FALSE, n_folds=4, n_loops=20, parallel=TRUE, n_cores=NULL, return_info = FALSE
+  y,
+  X,
+  Z = NULL,
+  time_effect = FALSE,
+  n_folds=4,
+  grid_size=20,
+  prefer_sparsity=TRUE,
+  sparsity_level=0.5,
+  max_threshold=10,
+  parallel=FALSE,
+  n_cores=NULL,
+  return_info = FALSE
   ) {
 
   id_effect <- FALSE
@@ -144,28 +160,32 @@ fit_saw_cv <- function(
   }
 
   # first: coarse sweep
-  s_thresh_list <- seq(0, 19, length.out = n_loops)
+  s_thresh_list <- seq(0, max_threshold, length.out = grid_size)
 
-  errors <- internal_cv(y, X, Z, func, s_thresh_list, folds, parallel, n_cores)
+  errors <- internal_cv(y, X, Z, func, s_thresh_list, folds, parallel, n_cores, prefer_sparsity)
 
   # second: detailed sweep
   candidates <- s_thresh_list[order(errors)[1:4]]
   minimum <- max(0, min(candidates) - sd(candidates))
   maximum <- max(candidates) + sd(candidates)
-  s_thresh_list <- seq(minimum, maximum, length.out = n_loops)
+  s_thresh_list <- seq(minimum, maximum, length.out = grid_size)
 
-  errors <- internal_cv(y, X, Z, func, s_thresh_list, folds, parallel, n_cores)
+  errors <- internal_cv(y, X, Z, func, s_thresh_list, folds, parallel, n_cores, prefer_sparsity)
 
   index <- which.min(errors)
+  if (prefer_sparsity) {
+    q <- quantile(ecdf(errors), sparsity_level)
+    index <- index + sum(errors[index:grid_size] < q)
+  }
 
   model <- fit_saw(y, X, Z, time_effect, id_effect, s_thresh_list[index], return_info)
-  model$optimal_s_thresh <- s_thresh_list[index]
+  model$s_thresh <- c(minimum, s_thresh_list[index], maximum)
   return(model)
 }
 
 
 #' @noRd
-internal_cv <- function(y, X, Z, func, s_thresh_list, folds, parallel, n_cores) {
+internal_cv <- function(y, X, Z, func, s_thresh_list, folds, parallel, n_cores, penalty) {
 
   task <- function(k) {
     # task for fold k
@@ -185,8 +205,9 @@ internal_cv <- function(y, X, Z, func, s_thresh_list, folds, parallel, n_cores) 
     for (s in seq_along(s_thresh_list)) {
       model <- func(y_train, X_train, Z_train, s_thresh_list[s])
       pred <- predict(model, X_test)
-
-      inner_errors[s] <- mean((y_test - pred)**2)
+      jumps <- model$jump_locations
+      penalty <- ifelse(penalty, sqrt(length(unlist(jumps))), 0)
+      inner_errors[s] <- mean((y_test - pred)**2) + penalty
     }
 
     return(inner_errors)

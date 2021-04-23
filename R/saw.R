@@ -96,7 +96,7 @@ saw_procedure <- function(y, X, Z=NULL, s_thresh="residual", return_info=FALSE, 
 
     c_hat_condition <- abs(c_tilde[, p]) > thresh
 
-    if (any(c_hat_condition)) {
+    if (!is.na(c_hat_condition) && !is.null(c_hat_condition) && any(c_hat_condition)) {
       jump_locations[[p]] = seq(1, (TT + 1))[c_hat_condition]  # how does this work?
     } else {
       jump_locations[[p]] = NA
