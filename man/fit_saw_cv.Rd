@@ -2,7 +2,7 @@
 % Please edit documentation in R/post_saw.R
 \name{fit_saw_cv}
 \alias{fit_saw_cv}
-\title{k-fold cross validation to find optimal threshold parameter}
+\title{Return cross-validated model}
 \usage{
 fit_saw_cv(
   y,
@@ -10,8 +10,11 @@ fit_saw_cv(
   Z = NULL,
   time_effect = FALSE,
   n_folds = 4,
-  n_loops = 20,
-  parallel = TRUE,
+  grid_size = 20,
+  prefer_sparsity = TRUE,
+  sparsity_level = 0.5,
+  max_threshold = 10,
+  parallel = FALSE,
   n_cores = NULL,
   return_info = FALSE
 )
@@ -28,17 +31,22 @@ are their own instrument.}
 \item{time_effect}{Boolean indicating if a time effect is to be estimated.}
 
 \item{n_folds}{Number of folds to use in cross validation step. Default 4. It
-makes sense that n_folds = k * n_cores.}
+makes sense that n_folds is multiple of n_cores.}
 
-\item{n_loops}{Number of s_thresh candidates.}
+\item{grid_size}{Number of s_thresh candidates.}
+
+\item{prefer_sparsity}{Boolean indicating whether the cross-validation.
+procedure should place a naive penalty on non-sparse solutions.}
 
 \item{parallel}{Boolean indicating if code is parallelized over folds.}
 
 \item{n_cores}{How many cores to use for paralellization. Default to number
-of available logical cores. It makes sense that n_folds = k * n_cores.}
+of available logical cores. It makes sense that n_folds is multiple of
+n_cores.}
 
 \item{return_info}{Return additional info on model fit.}
 }
 \description{
-k-fold cross validation to find optimal threshold parameter
+Find optimal threshold parameter using k-fold cross validation
+and return model fitted using this threshold.
 }
