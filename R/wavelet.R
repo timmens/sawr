@@ -37,8 +37,8 @@ compute_w_matrix_and_b_tilde <- function(
   selector <- rep.int(wavelet_bases[, index + 1], N)
 
   H <- construct_h_matrices(index, wavelet_bases, TT)
-  Q <- construct_q_matrices(index, x, z, N, TT, selector_minus, selector, H)
-  A <- construct_a_matrices(index, Q, PP, tolerance)
+  Q <- construct_q_matrices(index, x, z, N, TT, selector_minus, selector)
+  A <- construct_a_matrices(index, Q, N, TT, tolerance)
   W <- construct_w_matrix(index, wavelet_bases, A, H)
 
   caligraphic_data <-
@@ -81,7 +81,7 @@ construct_h_matrices <- function(index, wavelet_bases, TT) {
 
 #' @noRd
 construct_q_matrices <- function(
-  index, x, z, N, TT, selector_minus, selector, H
+  index, x, z, N, TT, selector_minus, selector
     ) {
     #' Construct `\underscore{Q}` matrices.
     #'
@@ -108,17 +108,16 @@ construct_q_matrices <- function(
       select <- selector == 1
 
       # construct `\underscore{Q}_{l, 2k - 1}` and `\underscore{Q}_{l, 2k}`
+      # (up to a scaling factor)
       if (with_instrument) {
-        Q_minus <-
-          ((t(z[select_minus,]) %*% x[select_minus,]) * H[["H_minus"]] ^ 2) / (N * TT)
-        Q <-
-          ((t(z[select,]) %*% x[select,]) * H[["H"]] ^ 2) / (N * TT)
+
+        Q_minus <- t(z[select_minus,]) %*% x[select_minus,]
+        Q <- t(z[select,]) %*% x[select,]
 
       } else {
-        Q_minus <-
-          ((t(x[select_minus,]) %*% x[select_minus,]) * H[["H_minus"]] ^ 2) / (N * TT)
-        Q <-
-          ((t(x[select,]) %*% x[select,])  * H[["H"]] ^ 2) / (N * TT)
+
+        Q_minus <- t(x[select_minus,]) %*% x[select_minus,]
+        Q <- t(x[select,]) %*% x[select,]
 
       }
 
@@ -130,7 +129,7 @@ construct_q_matrices <- function(
 
 
 #' @noRd
-construct_a_matrices <- function(index, Q, PP, tolerance) {
+construct_a_matrices <- function(index, Q, N, TT, tolerance) {
   #' Construct `A` matrices.
   #'
   #' These matrices can be found in section 2.3 of the paper.
@@ -151,10 +150,11 @@ construct_a_matrices <- function(index, Q, PP, tolerance) {
     Q_minus_inv <- robust_inverse(Q[["Q_minus"]], tolerance)
 
     summand <- Q_inv + Q_minus_inv
-    to_multiply <- robust_matrix_square_root(summand)
+    summand_sqrt <- robust_matrix_square_root(summand)
+    to_multiply <- robust_inverse(summand_sqrt)
 
-    A_minus <- Q_minus_inv %*% to_multiply
-    A <- Q_inv %*% to_multiply
+    A_minus <- (Q_minus_inv %*% to_multiply) * sqrt(N * TT)
+    A <- (Q_inv %*% to_multiply) * sqrt(N * TT)
 
     out <- list("A" = A, "A_minus" = A_minus)
   }
@@ -182,14 +182,12 @@ construct_caligraphic_data <- function(
       x_minus <- x * selector_minus
       x <- x * selector
 
-      x_caligraphic <-
-        x_minus %*% (A[["A_minus"]] * H[["H_minus"]]) - x %*% (A[["A"]] * H[["H"]])
+      x_caligraphic <- x_minus %*% A[["A_minus"]] - x %*% A[["A"]]
 
       if (with_instrument) {
         z_minus <- z * selector_minus
         z <- z * selector
-        z_caligraphic <-
-          z_minus %*% (A[["A_minus"]] * H[["H_minus"]]) - z %*% (A[["A"]] * H[["H"]])
+        z_caligraphic <- z_minus %*% A[["A_minus"]] - z %*% A[["A"]]
       } else {
         z_caligraphic <- NULL
       }
@@ -207,9 +205,9 @@ construct_w_matrix <- function(index, wavelet_bases, A, H) {
 
   } else {
     left <-
-      wavelet_bases[, index, drop = FALSE] %x% A[["A_minus"]] * H[["H_minus"]]
+      wavelet_bases[, index, drop = FALSE] %x% A[["A_minus"]]
     right <-
-      wavelet_bases[, index + 1, drop = FALSE] %x% A[["A"]] * H[["H"]]
+      wavelet_bases[, index + 1, drop = FALSE] %x% A[["A"]]
     W <- left - right
 
   }

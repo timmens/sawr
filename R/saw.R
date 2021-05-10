@@ -14,20 +14,14 @@ saw_procedure <- function(y, X, Z=NULL, s_thresh="residual", return_info=FALSE, 
   P <- dimensions[["P"]]
   dimensions <- c(T, N, P)
 
+  TT <- T - 1
+  PP <- 2 * P + 1  # this corresponds to `\underscore{P}` in the paper
 
   ## estimation
 
   delta_y <- data[,  1, drop = FALSE]
   x <- data[, -1, drop = FALSE]  # this corresponds to `\underscore{X}_{it}` in the paper
   z <- instrument
-
-  T <- dimensions[1]
-  N	<- dimensions[2]
-  P	<- dimensions[3]
-
-  TT <- T - 1
-  PP <- 2 * P + 1  # this corresponds to `\underscore{P}` in the paper
-
 
   ## construct father wavelet basis
 
