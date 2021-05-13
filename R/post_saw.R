@@ -156,11 +156,13 @@ fit_saw_cv <- function(
 
   # partial out arguments
   func <- function(y, X, Z, s_thresh) {
-    return(fit_saw(y, X, Z, time_effect=time_effect, id_effect=id_effect, s_thresh=s_thresh))
+    return(fit_saw(y, X, Z, time_effect=time_effect, id_effect=id_effect, s_thresh=s_thresh, return_info=TRUE))
   }
 
-  # first: coarse sweep
-  s_thresh_list <- seq(0, max_threshold, length.out = grid_size)
+  # first: coarse sweep oriented on asymptotic choice
+  result <- func(y, X, Z, "residual")
+  s_thresh = result[["info"]][["thresh"]]
+  s_thresh_list <- polyspace(s_thresh / 2, 20 * s_thresh, grid_size, degree=2)
 
   errors <- internal_cv(y, X, Z, func, s_thresh_list, folds, parallel, n_cores, prefer_sparsity)
 
@@ -224,4 +226,17 @@ internal_cv <- function(y, X, Z, func, s_thresh_list, folds, parallel, n_cores, 
 
   errors <- rowMeans(errors)
   return(errors)
+}
+
+#' @noRd
+polyspace <- function(start, stop, len, degree=2) {
+  f <- function(x) x ** (1 / degree)
+  f_inv <- function(x) x ** degree
+
+  .start <- .Machine$double.eps
+  .stop <- stop - start
+
+  space <- f_inv(seq(f(.start),f(.stop), length.out = len))
+  space <- space + start
+  return(space)
 }
