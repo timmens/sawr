@@ -114,6 +114,43 @@ predict.saw_model <- function(model, X) {
 }
 
 
+#' Iterative threshold finder
+#'
+#' @description Solve for threshold using iterative procedure which sets the
+#' threshold as the smallest absolute coefficient in iteration until convergence.
+#' @param y Matrix of labels. Has dimension T x N.
+#' @param X List of feature matrices. The pth entry corresponds to the design
+#' matrix of the pth covariate and has dimension T x N.
+#' @param Z Instruments corresponding to the argument X. If NULL all X variables
+#' are their own instrument.
+#' @param time_effect Boolean indicating if a time effect is to be estimated.
+#' @param id_effect Boolean indicating if an individual effect is to be
+#' estimated and returned.
+#' @param max_iter Maximum number of iterations. Default 20.
+#' @param return_info Return additional info on model fit.
+#' @export
+fit_saw_iter <- function(
+  y, X, Z = NULL, time_effect = TRUE, id_effect = TRUE, max_iter=20, return_info = FALSE
+  ) {
+  thresh <- "residual"
+  thresh_updated <- NULL
+  for (k in 1:max_iter) {
+    updated <- fit_saw(y, X, Z, time_effect, id_effect, thresh, return_info)
+    coeffs <- unlist(updated[["coeff_list"]])
+    thresh_updated <- min(abs(coeffs))
+
+    if (k > 1 && thresh_updated == thresh) {
+      break
+    }
+
+    thresh <- thresh_updated
+  }
+
+  result <- fit_saw(y, X, Z, time_effect, id_effect, thresh, return_info)
+  return(result)
+}
+
+
 #' Return cross-validated model
 #'
 #' @description Find optimal threshold parameter using k-fold cross validation

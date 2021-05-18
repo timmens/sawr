@@ -3,3 +3,4 @@
 S3method(predict,saw_model)
 export(fit_saw)
 export(fit_saw_cv)
+export(fit_saw_iter)
