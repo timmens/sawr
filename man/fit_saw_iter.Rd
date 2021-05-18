@@ -11,6 +11,8 @@ fit_saw_iter(
   time_effect = TRUE,
   id_effect = TRUE,
   max_iter = 20,
+  choose_min = TRUE,
+  numerical_threshold = 0.001,
   return_info = FALSE
 )
 }
@@ -29,6 +31,10 @@ are their own instrument.}
 estimated and returned.}
 
 \item{max_iter}{Maximum number of iterations. Default 20.}
+
+\item{choose_min}{Boolean, if true use minimum of absolute coefficients else max.}
+
+\item{numerical_threshold}{Threshold when to stop iteration. Default 0.001.}
 
 \item{return_info}{Return additional info on model fit.}
 }

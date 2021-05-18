@@ -127,19 +127,30 @@ predict.saw_model <- function(model, X) {
 #' @param id_effect Boolean indicating if an individual effect is to be
 #' estimated and returned.
 #' @param max_iter Maximum number of iterations. Default 20.
+#' @param numerical_threshold Threshold when to stop iteration. Default 0.001.
+#' @param choose_min Boolean, if true use minimum of absolute coefficients else max.
 #' @param return_info Return additional info on model fit.
 #' @export
 fit_saw_iter <- function(
-  y, X, Z = NULL, time_effect = TRUE, id_effect = TRUE, max_iter=20, return_info = FALSE
+  y,
+  X,
+  Z = NULL,
+  time_effect = TRUE,
+  id_effect = TRUE,
+  max_iter=20,
+  choose_min=TRUE,
+  numerical_threshold=0.001,
+  return_info = FALSE
   ) {
+  func <- ifelse(choose_min, min, max)
   thresh <- "residual"
   thresh_updated <- NULL
   for (k in 1:max_iter) {
     updated <- fit_saw(y, X, Z, time_effect, id_effect, thresh, return_info)
     coeffs <- unlist(updated[["coeff_list"]])
-    thresh_updated <- min(abs(coeffs))
+    thresh_updated <- func(abs(coeffs))
 
-    if (k > 1 && thresh_updated == thresh) {
+    if (k > 1 && abs(thresh_updated - thresh) < numerical_threshold) {
       break
     }
 
