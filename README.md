@@ -1,7 +1,9 @@
 # sawr 
 
 This R-package contains the implementation of the SAW estimation procedure, introduced
-in **A Wavelet Method for Panel Models with Jump Discontinuities in the Parameters** by _Bada O., Kneip A., Liebl D., Mensinger T., Gualtieri J. and Sickles R. C._ (link to paper will appear soon).
+in **A Wavelet Method for Panel Models with Jump Discontinuities in the Parameters** by
+_Bada O., Kneip A., Liebl D., Mensinger T., Gualtieri J. and Sickles R. C._ (link to
+paper will appear soon).
 
 
 ## Installation
@@ -37,4 +39,5 @@ pred <- predict(iv_model, X_new)
 
 ##### More examples on use cases
 
-More examples can be found in the repository of the simulation study corresponding to the publication: https://github.com/timmens/simulation-saw-paper.
+More examples can be found in the repository of the simulation study corresponding to
+the publication: https://github.com/timmens/simulation-saw-paper.
