@@ -23,27 +23,6 @@ X, y <- get_data()
 model <- sawr::fit_saw(y, X, time_effect = TRUE)
 ```
 
-##### Cross validation
-
-In case of distrust of the default threshold one can apply a standard two stage (coarse
-and fine grid) cross-validation procedure.
-
-```R
-cv_model <- sawr::fit_saw_cv(y, X, n_folds=4, parallel=TRUE)
-```
-
-##### Threshold iteration
-
-If cross-validation is too expensive on can usually improve upon the default threshold
-by setting the threshold as the minimum of the absolute value of the true coefficients.
-Since the true coefficients are not known we start with the default threshold and update
-the threshold with the minimum absolute value of the coefficients until convergence is
-reached.
-
-```R
-iterated_model <- sawr::fit_saw_iter(y, X, max_iter=100)
-```
-
 > Remark. Parallelization might only be available for unix users.
 
 
