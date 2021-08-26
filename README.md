@@ -1,7 +1,7 @@
 # sawr 
 
 This R-package contains the implementation of the SAW estimation procedure, introduced
-in _A Wavelet Method for Panel Models with Jump Discontinuities in the Parameters_ by by Bada O., Kneip A., Liebl D., Mensinger T., Gualtieri J. and Sickles R. C. (link to paper will appear soon).
+in **A Wavelet Method for Panel Models with Jump Discontinuities in the Parameters** by _Bada O., Kneip A., Liebl D., Mensinger T., Gualtieri J. and Sickles R. C._ (link to paper will appear soon).
 
 
 ## Installation
